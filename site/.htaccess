@@ -14,3 +14,10 @@ Options -Indexes
   Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
   Header always set Strict-Transport-Security "max-age=31536000"
 </IfModule>
+
+# Always check for the newest version of the page (so updates show up right away)
+<IfModule mod_headers.c>
+  <FilesMatch "\.html?$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
