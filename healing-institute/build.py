@@ -8,7 +8,9 @@ import os
 import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "public")
+OUT = os.environ.get("OUT") or os.path.join(HERE, "public")
+# DEMO=1 builds a preview copy that search engines won't index
+DEMO = os.environ.get("DEMO") == "1"
 
 PHONE = "(704) 284-9288"
 PHONE_HREF = "tel:+17042849288"
@@ -177,6 +179,7 @@ def page(path, title, desc, body, active="", image=None):
     og = f'{SITE_URL}/images/{image or "room-window.webp"}'
     url = f"{SITE_URL}/{path}"
     full_title = title if title.startswith("The Healing Institute") else f"{title} | The Healing Institute, Charlotte NC"
+    robots = '\n<meta name="robots" content="noindex, nofollow">' if DEMO else ''
     html = f'''<!doctype html>
 <html lang="en">
 <head>
@@ -189,7 +192,7 @@ def page(path, title, desc, body, active="", image=None):
 <meta property="og:description" content="{desc}">
 <meta property="og:image" content="{og}">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#2E4A3F">
+<meta name="theme-color" content="#2E4A3F">{robots}
 <link rel="icon" href="{root}assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
