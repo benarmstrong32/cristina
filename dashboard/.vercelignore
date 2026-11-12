@@ -1,0 +1,4 @@
+data/*.local.json
+.env*
+node_modules
+.next

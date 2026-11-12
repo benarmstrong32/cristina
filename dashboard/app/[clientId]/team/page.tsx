@@ -204,8 +204,8 @@ function Health({ snap, k }: { snap: Snapshot; k: Kpis }) {
   const now = new Date().toISOString();
   const unmarked = snap.ghl.calls.filter((c) => c.status === "booked" && c.startTime <= now).length;
   const items: { ok: boolean; title: string; detail: string }[] = [
-    { ok: snap.meta.connected, title: "Meta Ads", detail: snap.meta.live ? "Live from the Meta API (refreshes hourly)." : `Using a saved snapshot through ${snap.meta.asOf}. Add META_ACCESS_TOKEN for live data.` },
-    { ok: snap.ghl.connected, title: "GoHighLevel", detail: snap.ghl.connected ? (snap.ghl.live ? "Live from the GHL API (refreshes every 15 min)." : "Using a saved export. Add the GHL token for live data.") : snap.ghl.error ?? "Not connected." },
+    { ok: snap.meta.live, title: "Meta Ads", detail: snap.meta.live ? "Live from the Meta API (refreshes hourly)." : snap.meta.connected ? `Using a saved snapshot through ${snap.meta.asOf}. Add META_ACCESS_TOKEN for live data.` : "Not connected. Add META_ACCESS_TOKEN in Vercel." },
+    { ok: !!snap.ghl.live, title: "GoHighLevel", detail: snap.ghl.connected ? (snap.ghl.live ? "Live from the GHL API (refreshes every 15 min)." : "Using a saved export. Add the GHL token for live data.") : snap.ghl.error ?? "Not connected. Add GHL_TOKEN_NEW_VELOCITY in Vercel." },
     { ok: notInPipeline === 0, title: "Every ad lead is in the pipeline", detail: `${notInPipeline} of ${leads.length} ad leads have no opportunity in “New Velocity Sales”. Without one, Qualified / Customer can’t be counted.` },
     { ok: withAd >= leads.length * 0.8, title: "Leads carry ad tracking (UTMs)", detail: `${withAd} of ${leads.length} leads can be traced to a specific ad.` },
     { ok: unmarked === 0, title: "Call outcomes are marked", detail: `${unmarked} intro call${unmarked === 1 ? "" : "s"} in the past still say “confirmed”. Mark Showed or No-show in GHL so Appointments Completed is accurate.` },
