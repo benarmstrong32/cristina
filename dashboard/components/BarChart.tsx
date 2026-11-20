@@ -16,7 +16,7 @@ export function BarChart({
   const barW = Math.max(2, Math.min(18, step - 2));
   const fmt = (v: number) =>
     format === "usd" ? `$${v.toLocaleString("en-US", { maximumFractionDigits: v < 100 ? 2 : 0 })}` : v.toLocaleString("en-US");
-  const ticks = [0, nice / 2, nice];
+  const ticks = (format === "int" ? [0, nice / 2, nice].filter(Number.isInteger) : [0, nice / 2, nice]);
   const labelEvery = Math.ceil(data.length / 6);
   const h = hover != null ? data[hover] : null;
 

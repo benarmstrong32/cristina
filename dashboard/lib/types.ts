@@ -1,71 +1,28 @@
-export type MetaDay = {
-  date: string; // YYYY-MM-DD
-  spend: number;
-  impressions: number;
-  clicks: number;
-  linkClicks: number;
-  landingPageViews: number;
-  metaLeads: number;
-};
+export type RangeKey = "7d" | "14d" | "30d" | "90d";
 
-export type MetaAd = {
-  id: string;
-  name: string;
-  adsetName: string;
-  status: string;
-  spend: number;
-  impressions: number;
-  reach: number;
-  linkClicks: number;
-  metaLeads: number;
-};
-
-export type CallStatus = "booked" | "showed" | "no_show" | "cancelled";
-
-export type IntroCall = {
-  id: string;
-  contactId: string;
-  contactName: string;
-  calendarName: string;
-  bookedAt: string; // ISO
-  startTime: string; // ISO
-  status: CallStatus;
-  fromMeta: boolean;
-};
-
-export type Lead = {
-  contactId: string;
-  name: string;
-  email: string | null;
-  createdAt: string; // ISO
-  source: string; // GHL form/survey that created the contact
-  adId?: string; // Meta ad id from UTM, when present
-  fromMeta: boolean;
-  partial: boolean; // started a form but left no email/phone
-  stage?: string;
-  oppStatus?: string;
-  qualified: boolean;
-  won: boolean;
-  wonAt?: string;
-  value: number;
+export type KpiRow = {
+  range: RangeKey; since: string; until: string;
+  spend: number; impressions: number; link_clicks: number; landing_page_views: number; meta_leads: number;
+  ctr: number | null; cpc: number | null; cpm: number | null;
+  started: number; submitted: number; qualified: number; disqualified: number;
+  booked: number; attended: number; no_show: number; confirmed: number; customers: number; revenue: number;
+  funnel_b: number; funnel_b_from_dq: number; inquiries: number;
+  cost_per_qualified: number | null; cost_per_booked: number | null; cost_per_inquiry: number | null;
+  ad_form_events: number; ad_form_people: number; untracked_submissions: number;
+  upcoming: number; unmarked: number;
+  spend_chg: number | null; inquiries_chg: number | null; qualified_chg: number | null; booked_chg: number | null;
+  cost_per_qualified_chg: number | null; cost_per_booked_chg: number | null;
 };
 
 export type Snapshot = {
   clientId: string;
   generatedAt: string;
-  meta: {
-    connected: boolean;
-    live: boolean; // false = bundled snapshot
-    asOf: string;
-    days: MetaDay[];
-    ads: MetaAd[];
-    adsPeriod: { since: string; until: string };
-  };
-  ghl: {
-    connected: boolean;
-    live?: boolean;
-    error?: string;
-    leads: Lead[];
-    calls: IntroCall[];
-  };
+  dataThrough: string;
+  kpis: KpiRow[];
+  highlights: { key: string; value: string; detail: string }[];
+  daily: { date: string; spend: number; applications: number }[];
+  people: { person: string; name: string; first_date: string; funnel_a: string; funnel_b: string; call: string; sales: string; from_ads: string }[];
+  calls: { id: string; name: string; booked_date: string; call_at: string; start_label: string; outcome: string }[];
+  adTable: { ad_id: string; ad_name: string; adset_name: string; status: string; spend: number; impressions: number; ctr: number | null; cpc: number | null; meta_leads: number; ghl_submissions: number; qualified: number }[];
+  health: { check: string; ok: string; detail: string }[];
 };

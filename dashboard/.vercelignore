@@ -1,4 +1,5 @@
 data/*.local.json
+data/raw/
 .env*
 node_modules
 .next

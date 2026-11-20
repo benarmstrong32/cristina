@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import { getClient } from "@/config/clients";
 import { requireAccess } from "@/lib/auth";
 import { getSnapshot } from "@/lib/data";
-import { computeKpis, parseRange, resolveRange } from "@/lib/metrics";
+import { kpiFor, parseRange } from "@/lib/metrics";
 import { shortDate } from "@/lib/format";
 import { Controls, TopBar } from "@/components/ui";
 import { Overview } from "@/components/Overview";
+
+export const dynamic = "force-dynamic";
 
 export default async function ClientView({
   params, searchParams,
@@ -15,10 +17,8 @@ export default async function ClientView({
   if (!client) notFound();
   const session = await requireAccess(clientId);
   const range = parseRange((await searchParams).range);
-  const snap = await getSnapshot(client);
-  const r = resolveRange(snap, range);
-  const k = computeKpis(snap, r.since, r.until);
-  const prev = computeKpis(snap, r.prevSince, r.prevUntil);
+  const snap = await getSnapshot(clientId);
+  const k = snap ? kpiFor(snap, range) : undefined;
   const isTeam = session.role === "team";
 
   return (
@@ -33,15 +33,17 @@ export default async function ClientView({
           { key: "client", label: "Client view", href: `/${clientId}` },
         ] : [{ key: "client", label: "Overview", href: `/${clientId}` }]}
       />
-      {isTeam && (
-        <div className="notice">
-          <strong>Preview:</strong> this is exactly what {client.name} sees when they sign in.
-        </div>
+      {isTeam && <div className="notice"><strong>Preview:</strong> this is exactly what {client.name} sees when they sign in.</div>}
+      {!snap || !k ? (
+        <div className="notice">Results are being prepared. Please check back shortly.</div>
+      ) : (
+        <>
+          <p className="period">
+            {shortDate(k.since)} – {shortDate(k.until)}, compared with the same number of days before · Updated {shortDate(snap.dataThrough)}
+          </p>
+          <Overview k={k} snap={snap} />
+        </>
       )}
-      <p className="period">
-        {shortDate(r.since)} – {shortDate(r.until)} · compared with the {Math.round((Date.parse(r.until) - Date.parse(r.since)) / 864e5) + 1} days before
-      </p>
-      <Overview k={k} prev={prev} showRevenue={client.showRevenueToClient} audience="client" />
     </main>
   );
 }

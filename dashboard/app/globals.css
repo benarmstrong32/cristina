@@ -154,3 +154,12 @@ tbody tr:hover { background: var(--surface-2); }
 .login input { font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .login button { font: inherit; font-weight: 600; padding: 10px; border-radius: 8px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
 .login .err { color: var(--critical); font-size: 13px; }
+
+/* Funnel notes, definitions, highlight values */
+.note { color: var(--text-2); font-size: 13px; margin: 8px 0 0; max-width: 80ch; }
+.kpi .value.hl { font-size: 22px; line-height: 1.25; overflow-wrap: anywhere; }
+td.wrap { white-space: normal; min-width: 240px; }
+.defs { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 6px 16px; margin: 0; font-size: 13px; }
+.defs dt { font-weight: 600; }
+.defs dd { margin: 0; color: var(--text-2); }
+@media (max-width: 520px) { .defs { grid-template-columns: 1fr; } .defs dd { margin-bottom: 6px; } }
