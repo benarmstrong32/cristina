@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getClient } from "@/config/clients";
 import { requireAccess } from "@/lib/auth";
 import { getCreatives, getSnapshot } from "@/lib/data";
+import { getNextSteps, getNotable } from "@/lib/content";
 import { kpiFor, parseRange } from "@/lib/metrics";
 import { shortDate } from "@/lib/format";
 import { Controls, TopBar } from "@/components/ui";
@@ -23,6 +24,7 @@ export default async function ClientView({
   const view: ClientTab = (CLIENT_TABS.find((t) => t.key === sp.view)?.key ?? "overview") as ClientTab;
   const { snap, error } = await getSnapshot(client);
   const creatives = await getCreatives();
+  const [nextSteps, notable] = await Promise.all([getNextSteps(), getNotable()]);
   const k = snap ? kpiFor(snap, range) : undefined;
   const isTeam = session.role === "team";
 
@@ -51,7 +53,7 @@ export default async function ClientView({
           </nav>
           <Freshness snap={snap} clientId={clientId} back={`/${clientId}?range=${range}&view=${view}`} error={error} team={isTeam} />
           <p className="period">{shortDate(k.since)} – {shortDate(k.until)}{range === "max" ? ", since the ads started" : ", compared with the same number of days before"}</p>
-          <Overview k={k} snap={snap} creatives={creatives} client={client} view={view} />
+          <Overview k={k} snap={snap} creatives={creatives} client={client} view={view} nextSteps={nextSteps} notable={notable} />
         </>
       )}
     </main>

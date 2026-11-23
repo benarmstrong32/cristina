@@ -5,8 +5,10 @@ import { PeopleTable } from "./PeopleTable";
 import { AdsTable } from "./AdsTable";
 import { AdsByLead } from "./AdsByLead";
 import { NextSteps } from "./NextSteps";
+import { NotableCompanies } from "./NotableCompanies";
 import type { AdCreative } from "@/lib/data";
 import type { ClientConfig } from "@/config/clients";
+import type { NextStepsContent, NotableContent } from "@/lib/content";
 
 export const CLIENT_TABS = [
   { key: "overview", label: "Overview" },
@@ -20,7 +22,7 @@ export const CLIENT_TABS = [
 export type ClientTab = (typeof CLIENT_TABS)[number]["key"];
 
 /** The client-facing page, one tab at a time. */
-export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap: Snapshot; creatives: Record<string, AdCreative>; client: ClientConfig; view: ClientTab }) {
+export function Overview({ k, snap, creatives, client, view, nextSteps, notable }: { k: KpiRow; snap: Snapshot; creatives: Record<string, AdCreative>; client: ClientConfig; view: ClientTab; nextSteps: NextStepsContent | null; notable: NotableContent | null }) {
   return (
     <>
       {view === "overview" && (<>
@@ -81,6 +83,8 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
       <h2 className="section">People <span className="sub">everyone who entered either funnel since the ads started, and the furthest step they reached</span></h2>
       <PeopleTable people={snap.people} />
 
+      <NotableCompanies content={notable} />
+
       </>)}
 
       {view === "sources" && (<>
@@ -135,7 +139,7 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
       </details>
       </>)}
 
-      {view === "next" && <NextSteps snap={snap} />}
+      {view === "next" && <NextSteps snap={snap} content={nextSteps} />}
     </>
   );
 }

@@ -363,3 +363,13 @@ th { background: transparent; }
 .adset-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border); }
 .adset-stats dt { color: var(--text-3); font-size: 11px; }
 .adset-stats dd { margin: 0; font-weight: 600; font-size: 14px; }
+
+/* Companies worth a closer look */
+.notable-card { border-left: 3px solid var(--t-qualified); display: grid; gap: 6px; align-content: start; }
+.notable-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.notable-company { font-weight: 650; font-size: 16px; }
+.notable-lead { font-size: 13px; font-weight: 600; }
+.notable-lead span { font-weight: 400; color: var(--text-3); }
+.notable-card p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.55; }
+.notable-sources { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; }
+.notable-sources a { color: var(--accent); text-decoration: none; font-size: 12px; }

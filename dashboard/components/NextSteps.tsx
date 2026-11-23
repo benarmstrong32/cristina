@@ -1,5 +1,5 @@
 import type { Snapshot } from "@/lib/types";
-import { NEXT_STEPS } from "@/config/next-steps";
+import type { NextStepsContent } from "@/lib/content";
 import { num, shortDate, usd } from "@/lib/format";
 
 const DAY = 864e5;
@@ -10,8 +10,9 @@ function runningFor(start: string, now: Date) {
 }
 
 /** The client's "Next steps" tab: recent changes, new ad sets, the learning-phase note and the plan. */
-export function NextSteps({ snap }: { snap: Snapshot }) {
+export function NextSteps({ snap, content: NEXT_STEPS }: { snap: Snapshot; content: NextStepsContent | null }) {
   const now = new Date();
+  if (!NEXT_STEPS) return <div className="notice">Next steps will appear here soon.</div>;
   const adsets = (snap.adsets || [])
     .filter((s) => s.status === "ACTIVE")
     .sort((a, b) => b.start_time.localeCompare(a.start_time));
