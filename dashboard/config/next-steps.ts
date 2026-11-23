@@ -18,8 +18,7 @@ export const NEXT_STEPS = {
   learningPhase: {
     title: "Why we give new ads time before judging them",
     body: [
-      "Meta’s delivery system spends each new ad set’s first stretch in a “learning phase,” testing who to show the ads to. It needs roughly 50 results in a week to settle. At $10–$20 a day, the new ad sets will produce a handful of applications a week, not 50, so day-to-day numbers swing a lot and early results can look better or worse than they really are.",
-      "That’s why we set the yardstick before we look (cost per qualified applicant) and give each new ad set about two weeks before deciding. It’s also why we don’t edit an ad set while it’s running: any change to its budget, audience or creative restarts learning and throws away what Meta has learned. When we want to change something, we copy the ad set and run the new version alongside it.",
+      "We need more time for these ads to run before analyzing the data. New ad sets usually need 14–30 days for Meta to learn who to show them to and for the results to settle. Until then, early numbers can look better or worse than they really are.",
     ],
   },
 
