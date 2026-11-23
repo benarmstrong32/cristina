@@ -57,12 +57,11 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
           { label: "Qualified applicant", value: k.qualified },
           { label: "Booked call", value: k.booked },
           { label: "Attended call", value: k.attended },
-          { label: "Confirmed qualified", value: k.confirmed },
           { label: "Customer", value: k.customers },
         ]}
       />
       <p className="note">
-        {k.disqualified} applicant{k.disqualified === 1 ? "" : "s"} did not qualify. Attended, confirmed-qualified and customer counts fill in as calls are marked and deals move forward.
+        {k.disqualified} applicant{k.disqualified === 1 ? "" : "s"} did not qualify. Attended and customer counts fill in as calls are marked and deals move forward.
       </p>
 
       <h2 className="section">Funnel B: X-Ray opt-ins</h2>
