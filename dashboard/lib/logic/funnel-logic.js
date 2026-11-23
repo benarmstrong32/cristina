@@ -31,7 +31,7 @@ dash.loader('ghl_contacts', { description: 'Pages through GoHighLevel contacts (
   return { rows, cut: p >= 10 && (page.contacts || []).length === 100 };
 }});
 
-dash.loader('ghl_surveys', { description: 'Pages through application (survey) submissions and keeps who submitted, when, whether they were disqualified, and their ad tracking.', fn: async ({ answer, call, args }) => {
+dash.loader('ghl_surveys', { description: 'Pages through application (survey) submissions and keeps who submitted, when, whether the qualifier form re-routed them to Funnel B, and their ad tracking.', fn: async ({ answer, call, args }) => {
   const unwrap = (a) => { const x = typeof a === 'string' ? JSON.parse(a) : a; if (!x || x.success === false) throw new Error((x && (x.error || (x.data && x.data.message))) || 'GoHighLevel returned an error'); return x.data || x; };
   let page = unwrap(answer); const all = [...(page.submissions || [])]; let p = 1;
   while (page.meta && page.meta.nextPage && p < 10) {
@@ -110,7 +110,7 @@ dash.calc('actions', {
       if (!s.name && !s.email) continue;
       const p = key(s.name, s.email); personOf.set(s.contact_id, p); submittedIds.add(s.contact_id);
       add(p, s.name, s.contact_id, 'Completed application', s.created_at, fromAds(s), { ad_id: s.utm_content, form: { email: s.email, phone: s.phone, company: s.company, role: s.role, team_size: s.team_size, challenge: s.challenge, budget: s.budget, timeline: s.timeline, decision_maker: s.decision_maker, training: s.training, notes: s.notes } });
-      add(p, s.name, s.contact_id, s.disqualified ? 'Disqualified' : 'Qualified', s.created_at, fromAds(s), { ad_id: s.utm_content, detail: [s.team_size, s.role].filter(Boolean).join(' · ') });
+      add(p, s.name, s.contact_id, s.disqualified ? 'Re-routed to Funnel B' : 'Qualified', s.created_at, fromAds(s), { ad_id: s.utm_content, detail: [s.team_size, s.role].filter(Boolean).join(' · ') });
     }
     for (const f of funnelB) {
       if (isStaff(f.contact_id, f.email, f.name)) { staffIds.add(f.contact_id); continue; }
@@ -179,7 +179,7 @@ dash.calc('people', {
     const has = (list, x) => list.some((a) => a.action === x);
     return [...by.entries()].map(([person, list]) => {
       const first = list.reduce((m, a) => (a.date < m ? a.date : m), list[0].date);
-      const funnelA = has(list, 'Qualified') ? 'Completed · qualified' : has(list, 'Disqualified') ? 'Completed · not qualified' : has(list, 'Started application only') ? 'Started, did not finish' : '—';
+      const funnelA = has(list, 'Qualified') ? 'Completed · qualified' : has(list, 'Re-routed to Funnel B') ? 'Completed · re-routed to Funnel B' : has(list, 'Started application only') ? 'Started, did not finish' : '—';
       const call = has(list, 'Attended call') ? 'Attended' : has(list, 'No-show') ? 'No-show' : has(list, 'Call outcome not marked') ? 'Booked · outcome not marked' : has(list, 'Booked call') ? 'Booked · upcoming' : has(list, 'Cancelled call') ? 'Cancelled' : '—';
       const sales = has(list, 'Customer') ? 'Customer' : has(list, 'Lost') ? 'Lost' : has(list, 'Confirmed qualified') ? 'Confirmed qualified' : '—';
       const FIELDS = ['email', 'phone', 'company', 'role', 'team_size', 'challenge', 'budget', 'timeline', 'decision_maker', 'training', 'notes'];
@@ -226,13 +226,13 @@ dash.calc('kpis', {
       const submitted = people('Completed application'), qualified = people('Qualified'), booked = people('Booked call');
       const startedAll = new Set([...people('Started application only'), ...submitted]);
       const fb = people('Funnel B opt-in');
-      const dqEver = new Set(actions.filter((a) => a.action === 'Disqualified').map((a) => a.person));
+      const dqEver = new Set(actions.filter((a) => a.action === 'Re-routed to Funnel B').map((a) => a.person));
       const adForms = inR.filter((a) => (a.action === 'Completed application' || a.action === 'Funnel B opt-in') && a.from_ads === 'Yes');
       const customers = inR.filter((a) => a.action === 'Customer');
       return {
         since, until: to, spend, impressions, link_clicks, landing_page_views: sum('landing_page_views'), meta_leads: sum('meta_leads'),
         ctr: div(link_clicks, impressions), cpc: div(spend, link_clicks), cpm: div(spend * 1000, impressions),
-        started: startedAll.size, submitted: submitted.size, qualified: qualified.size, disqualified: people('Disqualified').size,
+        started: startedAll.size, submitted: submitted.size, qualified: qualified.size, disqualified: people('Re-routed to Funnel B').size,
         booked: booked.size, attended: people('Attended call').size, no_show: people('No-show').size,
         confirmed: people('Confirmed qualified').size, customers: new Set(customers.map((a) => a.person)).size,
         revenue: customers.reduce((s, a) => s + (a.value || 0), 0),

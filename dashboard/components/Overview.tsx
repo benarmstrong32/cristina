@@ -61,13 +61,12 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
         ]}
       />
       <p className="note">
-        {k.disqualified} applicant{k.disqualified === 1 ? "" : "s"} did not qualify. Attended and customer counts fill in as calls are marked and deals move forward.
+        {k.disqualified} applicant{k.disqualified === 1 ? " was" : "s were"} re-routed to Funnel B based on the qualifier form. Attended and customer counts fill in as calls are marked and deals move forward.
       </p>
 
-      <h2 className="section">Funnel B: X-Ray opt-ins</h2>
+      <h2 className="section">Funnel B: X-Ray offer</h2>
       <div className="grid kpis">
-        <Kpi label="Funnel B contacts" value={num(k.funnel_b)} hint="People who opted into the X-Ray offer" />
-        <Kpi label="Of those, disqualified in Funnel A first" value={num(k.funnel_b_from_dq)} hint="Applied, didn’t qualify, then took the X-Ray offer" />
+        <Kpi label="Re-routed to Funnel B" value={num(k.funnel_b)} hint="Applicants the qualifier form re-routed to the X-Ray offer, who then opted in" />
       </div>
 
       </>)}
@@ -120,12 +119,12 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
         <dl className="defs">
           <dt>Started application</dt><dd>Entered name and contact details on the first page of the Funnel A application but did not finish it.</dd>
           <dt>Completed application</dt><dd>Submitted the Sales Growth Call Qualifier survey (either version).</dd>
-          <dt>Qualified applicant</dt><dd>Completed the application and was not marked disqualified by its qualifying questions.</dd>
+          <dt>Qualified applicant</dt><dd>Completed the application and was not re-routed to Funnel B by the qualifier form.</dd>
           <dt>Booked call</dt><dd>Booked a Sales Growth Strategy Call with Chris. Cancelled bookings are not counted.</dd>
           <dt>Attended call</dt><dd>The booking is marked Showed in GoHighLevel.</dd>
           <dt>Confirmed qualified</dt><dd>After the call, the opportunity reached Proposal Sent or Closed in the New Velocity Sales pipeline.</dd>
           <dt>Customer</dt><dd>The opportunity is marked Won or moved to Closed.</dd>
-          <dt>Funnel B contact</dt><dd>Opted into the X-Ray offer form.</dd>
+          <dt>Re-routed to Funnel B</dt><dd>Based on their answers to the qualifier form, sent to the X-Ray offer (Funnel B) instead of booking a call, and opted in.</dd>
           <dt>Lead</dt><dd>Anyone who came into GoHighLevel through the application page, whether or not they finished it or booked a call. Each is tagged “9miles media lead” in GoHighLevel.</dd>
           <dt>Left out</dt><dd>Internal test records and blank records with no name or email.</dd>
         </dl>
