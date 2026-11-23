@@ -6,6 +6,7 @@ import { kpiFor, parseRange } from "@/lib/metrics";
 import { shortDate } from "@/lib/format";
 import { Controls, TopBar } from "@/components/ui";
 import { Overview } from "@/components/Overview";
+import { Freshness } from "@/components/Freshness";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function ClientView({
   if (!client) notFound();
   const session = await requireAccess(clientId);
   const range = parseRange((await searchParams).range);
-  const snap = await getSnapshot(clientId);
+  const { snap, error } = await getSnapshot(client);
   const k = snap ? kpiFor(snap, range) : undefined;
   const isTeam = session.role === "team";
 
@@ -38,9 +39,8 @@ export default async function ClientView({
         <div className="notice">Results are being prepared. Please check back shortly.</div>
       ) : (
         <>
-          <p className="period">
-            {shortDate(k.since)} – {shortDate(k.until)}, compared with the same number of days before · Updated {shortDate(snap.dataThrough)}
-          </p>
+          <Freshness snap={snap} clientId={clientId} back={`/${clientId}?range=${range}`} error={error} team={isTeam} />
+          <p className="period">{shortDate(k.since)} – {shortDate(k.until)}, compared with the same number of days before</p>
           <Overview k={k} snap={snap} />
         </>
       )}

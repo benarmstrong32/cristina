@@ -18,6 +18,8 @@ export type Snapshot = {
   clientId: string;
   generatedAt: string;
   dataThrough: string;
+  source?: "live" | "saved";
+  crmThrough?: string;
   kpis: KpiRow[];
   highlights: { key: string; value: string; detail: string }[];
   daily: { date: string; spend: number; applications: number }[];

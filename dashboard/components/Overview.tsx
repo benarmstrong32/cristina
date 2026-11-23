@@ -2,6 +2,8 @@ import type { KpiRow, Snapshot } from "@/lib/types";
 import { num, pct, usd } from "@/lib/format";
 import { Funnel, Kpi } from "./ui";
 import { BarChart } from "./BarChart";
+import { PeopleTable } from "./PeopleTable";
+import { AdsTable } from "./AdsTable";
 
 /** The client-facing page: KPIs, highlights, both funnels, reconciliation, definitions, trend. */
 export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
@@ -53,6 +55,12 @@ export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
         <Kpi label="Funnel B contacts" value={num(k.funnel_b)} hint="People who opted into the X-Ray offer" />
         <Kpi label="Of those, disqualified in Funnel A first" value={num(k.funnel_b_from_dq)} hint="Applied, didn’t qualify, then took the X-Ray offer" />
       </div>
+
+      <h2 className="section">People <span className="sub">everyone who entered either funnel since the ads started, and the furthest step they reached</span></h2>
+      <PeopleTable people={snap.people} />
+
+      <h2 className="section">Ads <span className="sub">each ad’s results over the last 90 days (not affected by the date range)</span></h2>
+      <AdsTable ads={snap.adTable} />
 
       <h2 className="section">Why Meta shows a different number</h2>
       <div className="card table-wrap">

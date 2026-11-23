@@ -6,6 +6,9 @@ import { getSnapshot } from "@/lib/data";
 import { kpiFor, parseRange } from "@/lib/metrics";
 import { dateTime, num, pct, shortDate, usd } from "@/lib/format";
 import { Controls, Kpi, TopBar } from "@/components/ui";
+import { Freshness } from "@/components/Freshness";
+import { PeopleTable } from "@/components/PeopleTable";
+import { AdsTable } from "@/components/AdsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +33,7 @@ export default async function TeamView({
   const sp = await searchParams;
   const range = parseRange(sp.range);
   const tab: Tab = (TABS.find((t) => t.key === sp.tab)?.key ?? "people") as Tab;
-  const snap = await getSnapshot(clientId);
+  const { snap, error } = await getSnapshot(client);
   const k = snap ? kpiFor(snap, range) : undefined;
   const base = `/${clientId}/team`;
 
@@ -46,27 +49,9 @@ export default async function TeamView({
       </nav>
       {!snap || !k ? <div className="notice">No snapshot yet. Run the data refresh.</div> : (
         <>
-          <p className="period">Data through {shortDate(snap.dataThrough)} · snapshot built {dateTime(snap.generatedAt)} ET</p>
+          <Freshness snap={snap} clientId={clientId} back={`${base}?${new URLSearchParams({ range, tab })}`} error={error} team />
 
-          {tab === "people" && (
-            <div className="card table-wrap">
-              <table>
-                <thead><tr><th>First seen</th><th>Name</th><th>Funnel A application</th><th>Funnel B</th><th>Call with Chris</th><th>Sales outcome</th><th>Ad tracking</th></tr></thead>
-                <tbody>
-                  {snap.people.map((p) => (
-                    <tr key={p.person}>
-                      <td className="tnum">{shortDate(p.first_date)}</td><td>{p.name}</td>
-                      <td><span className={pill(p.funnel_a, ["Completed · qualified"], ["Started, did not finish"])}>{p.funnel_a}</span></td>
-                      <td>{p.funnel_b}</td>
-                      <td><span className={pill(p.call, ["Attended"], ["Booked · outcome not marked"], ["No-show"])}>{p.call}</span></td>
-                      <td><span className={pill(p.sales, ["Customer"], [], ["Lost"])}>{p.sales}</span></td>
-                      <td>{p.from_ads}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {tab === "people" && <PeopleTable people={snap.people} showTracking />}
 
           {tab === "calls" && (
             <>
@@ -97,22 +82,7 @@ export default async function TeamView({
           {tab === "ads" && (
             <>
               <p className="period">Each ad’s results over the last 90 days (not affected by the range picker).</p>
-              <div className="card table-wrap">
-                <table>
-                  <thead><tr><th>Ad</th><th>Ad set</th><th>Status</th><th className="r">Spend</th><th className="r">Impr.</th><th className="r">Link CTR</th><th className="r">CPC</th><th className="r">Meta leads</th><th className="r">GHL submissions</th><th className="r">Qualified</th></tr></thead>
-                  <tbody>
-                    {snap.adTable.map((a) => (
-                      <tr key={a.ad_id}>
-                        <td>{a.ad_name}</td><td style={{ color: "var(--text-3)" }}>{a.adset_name}</td>
-                        <td><span className={a.status === "Active" ? "pill good" : "pill"}>{a.status}</span></td>
-                        <td className="r tnum">{usd(a.spend)}</td><td className="r tnum">{num(a.impressions)}</td>
-                        <td className="r tnum">{pct(a.ctr, 2)}</td><td className="r tnum">{usd(a.cpc, true)}</td>
-                        <td className="r tnum">{num(a.meta_leads)}</td><td className="r tnum">{num(a.ghl_submissions)}</td><td className="r tnum">{num(a.qualified)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdsTable ads={snap.adTable} />
             </>
           )}
 
