@@ -39,9 +39,9 @@ export const NEXT_STEPS = {
         "The Brand Video still drives most of the volume, but its click-through and conversion rates have dropped compared with its first weeks, a sign people have seen it enough. We’ll keep it running while we test shorter cut-downs and new opening lines of Chris’s story.",
     },
     {
-      title: "Follow up with everyone who raised a hand",
+      title: "Chris: review current applicants and reach out personally",
       detail:
-        "Two qualified applicants (Jeong and Tricia) haven’t booked a call yet and are worth a personal reach-out. Marking each call as showed or no-show in GoHighLevel after it happens lets this scorecard show attended calls and, later, closed deals.",
+        "We recommend Chris review everyone in the People tab, both completed applications and partial submissions, and reach out to them directly by phone or email. Qualified applicants who haven’t booked yet (like Jeong and Tricia) and people who started but didn’t finish are the warmest follow-ups. A personal message from Chris often turns them into booked calls.",
     },
   ],
 };
