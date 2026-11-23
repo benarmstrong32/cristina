@@ -58,12 +58,16 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
   const until = "2030-12-31";
 
   // Meta, reshaped to the field names the shared loaders read.
-  const [dayRows, adRows, adStatus] = await Promise.all([
+  const [dayRows, adRows, adStatus, setRows, setInfo] = await Promise.all([
     graph(`act_${c.metaAdAccountId}/insights?level=account&time_increment=1&date_preset=maximum&fields=spend,impressions,inline_link_clicks,actions`, meta),
     graph(`act_${c.metaAdAccountId}/insights?level=ad&date_preset=maximum&fields=ad_id,ad_name,adset_name,spend,impressions,inline_link_clicks,actions`, meta),
     graph(`act_${c.metaAdAccountId}/ads?fields=id,effective_status`, meta),
+    graph(`act_${c.metaAdAccountId}/insights?level=adset&date_preset=maximum&fields=adset_id,adset_name,spend,impressions,inline_link_clicks,actions`, meta),
+    graph(`act_${c.metaAdAccountId}/adsets?fields=id,name,effective_status,start_time,daily_budget`, meta),
   ]);
   const status = new Map(adStatus.map((a) => [a.id, a.effective_status]));
+  const setStats = new Map(setRows.map((r) => [r.adset_id, r]));
+  const metaAdsets = { ad_entities: setInfo.map((s) => { const r = setStats.get(s.id) || {}; return { id: s.id, name: s.name, effective_status: s.effective_status, start_time: s.start_time, daily_budget: s.daily_budget ? Number(s.daily_budget) / 100 : 0, amount_spent: r.spend, impressions: r.impressions, link_click: r.inline_link_clicks, lead: act(r.actions, "lead") }; }) };
   const metaDaily = { ad_entities: dayRows.map((r) => ({ date_start: r.date_start, amount_spent: r.spend, impressions: r.impressions, link_click: r.inline_link_clicks, landing_page_view: act(r.actions, "landing_page_view"), lead: act(r.actions, "lead") })) };
   const metaAds = { ad_entities: adRows.map((r) => ({ id: r.ad_id, name: r.ad_name, adset_name: r.adset_name, effective_status: status.get(r.ad_id) ?? "UNKNOWN", amount_spent: r.spend, impressions: r.impressions, link_click: r.inline_link_clicks, lead: act(r.actions, "lead") })) };
 
@@ -94,6 +98,7 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
     ghl_opps: await rowsFrom("ghl_opps", opps),
     ghl_stages: await rowsFrom("ghl_stages", [pipelines]),
     ghl_orders: await rowsFrom("ghl_orders", [orders]),
+    meta_adsets: await rowsFrom("meta_adsets", [metaAdsets]),
   };
   return computeSnapshot(c.id, rows, { source: "live" });
 }

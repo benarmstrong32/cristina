@@ -3,7 +3,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export const DATASETS = ["meta_daily", "meta_ads", "ghl_contacts", "ghl_surveys", "ghl_funnel_b", "ghl_events", "ghl_opps", "ghl_stages", "ghl_orders"];
+export const DATASETS = ["meta_daily", "meta_ads", "ghl_contacts", "ghl_surveys", "ghl_funnel_b", "ghl_events", "ghl_opps", "ghl_stages", "ghl_orders", "meta_adsets"];
 
 let registry = null;
 async function logic() {
@@ -46,6 +46,12 @@ export async function computeSnapshot(clientId, rows, extra = {}) {
   // Name each person's ad from the Meta ad list.
   const adName = new Map((values.meta_ads || []).map((a) => [a.ad_id, { name: a.ad_name, adset: a.adset_name, status: a.status }]));
   const people = values.people.map((p) => ({ ...p, ad_name: adName.get(p.ad_id)?.name || (p.ad_id ? `Ad ${p.ad_id}` : ''), adset_name: adName.get(p.ad_id)?.adset || '' }));
+  // Ad sets with what they produced in GoHighLevel (via each person's ad).
+  const adToSet = new Map((values.meta_ads || []).map((a) => [a.ad_id, a.adset_name]));
+  const adsets = (values.meta_adsets || []).map((s) => {
+    const mine = people.filter((p) => p.ad_id && adToSet.get(p.ad_id) === s.name);
+    return { ...s, applicants: mine.filter((p) => p.funnel_a.startsWith('Completed')).length, qualified: mine.filter((p) => p.funnel_a === 'Completed · qualified').length, booked: mine.filter((p) => p.call !== '—' && p.call !== 'Cancelled').length, leads: mine.length };
+  });
   return {
     clientId,
     generatedAt: new Date().toISOString(),
@@ -57,6 +63,7 @@ export async function computeSnapshot(clientId, rows, extra = {}) {
     people,
     calls: values.calls,
     adTable: values.ad_table,
+    adsets,
     health: values.health,
   };
 }

@@ -9,6 +9,13 @@ dash.loader('meta_daily', { description: 'Reads the per-day rows out of the Meta
   return list.map((r) => ({ date: r.date_start, spend: n(r.amount_spent), impressions: n(r.impressions), link_clicks: n(r.link_click), landing_page_views: n(r.landing_page_view), meta_leads: n(r.lead) }));
 }});
 
+dash.loader('meta_adsets', { description: 'Reads one row per ad set: when it started, its daily budget and results.', fn: ({ answer }) => {
+  const list = typeof answer.ad_entities === 'string' ? JSON.parse(answer.ad_entities) : answer.ad_entities;
+  if (!Array.isArray(list)) throw new Error((answer.error && (answer.error.message || answer.error)) || 'Meta returned no rows');
+  const n = (v) => v == null ? 0 : Number(typeof v === 'object' ? v.value : v) || 0;
+  return list.map((r) => ({ adset_id: String(r.id), name: r.name, status: r.effective_status, start_time: r.start_time, daily_budget: n(r.daily_budget), spend: n(r.amount_spent), impressions: n(r.impressions), link_clicks: n(r.link_click), meta_leads: n(r.lead) }));
+}});
+
 dash.loader('meta_ads', { description: 'Reads one row per ad out of the Meta Ads answer.', fn: ({ answer }) => {
   const list = typeof answer.ad_entities === 'string' ? JSON.parse(answer.ad_entities) : answer.ad_entities;
   if (!Array.isArray(list)) throw new Error((answer.error && (answer.error.message || answer.error)) || 'Meta returned no rows');

@@ -27,6 +27,7 @@ export type Snapshot = {
   calls: { id: string; name: string; booked_date: string; call_at: string; start_label: string; outcome: string }[];
   adTable: { ad_id: string; ad_name: string; adset_name: string; status: string; spend: number; impressions: number; ctr: number | null; cpc: number | null; meta_leads: number; ghl_submissions: number; qualified: number }[];
   health: { check: string; ok: string; detail: string }[];
+  adsets?: { adset_id: string; name: string; status: string; start_time: string; daily_budget: number; spend: number; impressions: number; link_clicks: number; meta_leads: number; applicants: number; qualified: number; booked: number; leads: number }[];
 };
 
 export type Person = {

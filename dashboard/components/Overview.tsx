@@ -4,6 +4,7 @@ import { Funnel, Kpi } from "./ui";
 import { PeopleTable } from "./PeopleTable";
 import { AdsTable } from "./AdsTable";
 import { AdsByLead } from "./AdsByLead";
+import { NextSteps } from "./NextSteps";
 import type { AdCreative } from "@/lib/data";
 import type { ClientConfig } from "@/config/clients";
 
@@ -14,6 +15,7 @@ export const CLIENT_TABS = [
   { key: "sources", label: "Which ad" },
   { key: "ads", label: "Ads" },
   { key: "counting", label: "How we count" },
+  { key: "next", label: "Next steps" },
 ] as const;
 export type ClientTab = (typeof CLIENT_TABS)[number]["key"];
 
@@ -132,6 +134,8 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
         </dl>
       </details>
       </>)}
+
+      {view === "next" && <NextSteps snap={snap} />}
     </>
   );
 }

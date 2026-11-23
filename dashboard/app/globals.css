@@ -345,3 +345,21 @@ th { background: transparent; }
 .ad-card { border-left: 1px solid var(--border); }
 .ad-creative img { box-shadow: 0 2px 8px rgb(13 27 46 / 0.12); }
 .ad-title { color: var(--text); }
+
+/* Next steps tab */
+.steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+.step-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.step p, .explainer p { margin: 0; color: var(--text-2); font-size: 14px; line-height: 1.55; max-width: 75ch; }
+.explainer p + p { margin-top: 8px; }
+.step.change { border-left: 3px solid var(--t-qualified); }
+.explainer { margin-top: 16px; border-left: 3px solid var(--accent); }
+.steps-list { list-style: none; counter-reset: step; padding: 0; margin: 0; display: grid; gap: 12px; }
+.steps-list li { counter-increment: step; position: relative; padding-left: 56px; }
+.steps-list li::before { content: counter(step); position: absolute; left: 16px; top: 16px; width: 26px; height: 26px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 600; font-size: 13px; display: grid; place-items: center; }
+.adset-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.adset-name { font-weight: 600; font-size: 14px; }
+.adset-days { font-size: 28px; font-weight: 650; letter-spacing: -0.02em; margin-top: 6px; }
+.adset-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border); }
+.adset-stats dt { color: var(--text-3); font-size: 11px; }
+.adset-stats dd { margin: 0; font-weight: 600; font-size: 14px; }
