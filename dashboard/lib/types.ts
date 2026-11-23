@@ -30,7 +30,7 @@ export type Snapshot = {
 };
 
 export type Person = {
-  person: string; name: string; first_date: string;
+  person: string; name: string; first_date: string; lead_tag: string;
   email: string; phone: string; company: string; role: string; team_size: string; challenge: string;
   budget: string; timeline: string; decision_maker: string; training: string; notes: string;
   funnel_a: string; funnel_b: string; call: string; sales: string; from_ads: string;

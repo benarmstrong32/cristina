@@ -26,7 +26,7 @@ dash.loader('ghl_contacts', { description: 'Pages through GoHighLevel contacts (
   }
   const rows = all.map((c) => {
     const a = c.attributionSource || {};
-    return { contact_id: c.id, first_name: c.firstName || c.firstNameLowerCase || '', last_name: c.lastName || c.lastNameLowerCase || '', email: c.email || '', phone: c.phone || '', source: (c.source || '').trim(), date_added: c.dateAdded, utm_source: a.utmSource || '', session_source: a.sessionSource || '', utm_content: a.utmContent || '', has_fbclid: !!(a.fbclid || a.fbc) };
+    return { contact_id: c.id, first_name: c.firstName || c.firstNameLowerCase || '', last_name: c.lastName || c.lastNameLowerCase || '', email: c.email || '', phone: c.phone || '', source: (c.source || '').trim(), date_added: c.dateAdded, utm_source: a.utmSource || '', session_source: a.sessionSource || '', utm_content: a.utmContent || '', has_fbclid: !!(a.fbclid || a.fbc), lead_tag: (c.tags || []).some((t) => String(t).toLowerCase() === '9miles media lead') };
   });
   return { rows, cut: p >= 10 && (page.contacts || []).length === 100 };
 }});
@@ -127,6 +127,15 @@ dash.calc('actions', {
       personOf.set(c.contact_id, p);
       add(p, name, c.contact_id, 'Started application only', c.date_added, fromAds({ has_fbclid: c.has_fbclid, utm_source: c.utm_source, referrer: '' }), { ad_id: c.utm_content, form: { email: c.email, phone: c.phone } });
     }
+    // Leads: contacts tagged "9miles media lead" (entered through the application page).
+    for (const c of contacts) {
+      if (!c.lead_tag) continue;
+      const name = `${c.first_name} ${c.last_name}`.trim();
+      if (isStaff(c.contact_id, c.email, name) || (!name && !c.email)) continue;
+      const p = personOf.get(c.contact_id) || key(name, c.email);
+      personOf.set(c.contact_id, p);
+      add(p, name, c.contact_id, 'Lead tagged', c.date_added, fromAds({ has_fbclid: c.has_fbclid, utm_source: c.utm_source, referrer: '' }), { ad_id: c.utm_content, form: { email: c.email, phone: c.phone } });
+    }
     const who = (id, name, email) => {
       if (personOf.has(id)) return personOf.get(id);
       const c = byId.get(id); const n = name || (c ? `${c.first_name} ${c.last_name}` : '');
@@ -176,7 +185,7 @@ dash.calc('people', {
       const FIELDS = ['email', 'phone', 'company', 'role', 'team_size', 'challenge', 'budget', 'timeline', 'decision_maker', 'training', 'notes'];
       const forms = list.filter((a) => a.form).sort((a, b) => (a.action === 'Completed application' ? 0 : 1) - (b.action === 'Completed application' ? 0 : 1) || b.at.localeCompare(a.at));
       const answers = Object.fromEntries(FIELDS.map((f) => [f, (forms.find((a) => a.form[f]) || { form: {} }).form[f] || '']));
-      return { person, name: list[0].name, first_date: first, ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
+      return { person, name: list[0].name, first_date: first, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
     }).sort((a, b) => b.first_date.localeCompare(a.first_date));
   },
 });
@@ -225,8 +234,8 @@ dash.calc('kpis', {
         confirmed: people('Confirmed qualified').size, customers: new Set(customers.map((a) => a.person)).size,
         revenue: customers.reduce((s, a) => s + (a.value || 0), 0),
         funnel_b: fb.size, funnel_b_from_dq: [...fb].filter((p) => dqEver.has(p)).length,
-        inquiries: new Set([...submitted, ...fb]).size,
-        cost_per_qualified: div(spend, qualified.size), cost_per_booked: div(spend, booked.size), cost_per_inquiry: div(spend, new Set([...submitted, ...fb]).size),
+        inquiries: people('Lead tagged').size,
+        cost_per_qualified: div(spend, qualified.size), cost_per_booked: div(spend, booked.size), cost_per_inquiry: div(spend, people('Lead tagged').size),
         ad_form_events: adForms.length, ad_form_people: new Set(adForms.map((a) => a.person)).size,
         untracked_submissions: inR.filter((a) => (a.action === 'Completed application' || a.action === 'Funnel B opt-in') && a.from_ads === 'No').length,
         upcoming: actions.filter((a) => a.action === 'Booked call' && a.call_at > now).length,
@@ -280,11 +289,13 @@ dash.calc('health', {
     const untracked = people.filter((p) => p.from_ads === 'Not tracked' && p.funnel_a.startsWith('Completed'));
     const started = people.filter((p) => p.funnel_a === 'Started, did not finish');
     const list = (rows) => rows.map((r) => r.name).join(', ');
+    const untagged = people.filter((p) => p.funnel_a !== '—' && p.lead_tag !== 'Yes');
     return [
       { check: 'Call outcomes are marked', ok: unmarked.length ? 'Needs attention' : 'OK', detail: unmarked.length ? `${unmarked.length} past call(s) still say confirmed: ${unmarked.map((a) => a.name).join(', ')}. Mark Showed or No-show so attended calls count.` : 'Every past call has an outcome.' },
       { check: 'Qualified applicants have booked', ok: qualNoCall.length ? 'Needs attention' : 'OK', detail: qualNoCall.length ? `Qualified but no call booked: ${list(qualNoCall)}. Worth a follow-up.` : 'Every qualified applicant has booked.' },
       { check: 'Completed applications are in the sales pipeline', ok: notInPipe.length ? 'Needs attention' : 'OK', detail: notInPipe.length ? `No opportunity in New Velocity Sales: ${list(notInPipe)}. Confirmed qualification and sales outcomes are read from the pipeline.` : 'All completed applications have an opportunity.' },
       { check: 'Applications carry ad tracking', ok: untracked.length ? 'Needs attention' : 'OK', detail: untracked.length ? `No Facebook/Instagram tracking on: ${list(untracked)}. They count in GoHighLevel but not in Meta.` : 'All applications are tracked to an ad.' },
+      { check: 'Application-page contacts carry the 9miles media lead tag', ok: untagged.length ? 'Needs attention' : 'OK', detail: untagged.length ? `Missing the tag: ${list(untagged)}. Add it in GoHighLevel (or check the auto-tag workflow) so they count as leads.` : 'Everyone who entered through the application page is tagged.' },
       { check: 'Started but didn’t finish the application', ok: started.length ? 'Needs attention' : 'OK', detail: started.length ? `${started.length} people left contact details but didn’t submit: ${list(started)}. Possible follow-up list.` : 'None.' },
     ];
   },

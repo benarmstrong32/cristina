@@ -29,7 +29,7 @@ function phone(v: string) {
 export function PeopleTable({ people, showTracking }: { people: Snapshot["people"]; showTracking?: boolean }) {
   // Only show answer columns that someone actually filled in.
   const cols = FORM_COLUMNS.filter((c) => people.some((p) => p[c.key]));
-  const span = 6 + cols.length + (showTracking ? 1 : 0);
+  const span = 6 + cols.length + (showTracking ? 2 : 0);
   return (
     <div className="card table-wrap">
       <table className="people">
@@ -39,6 +39,7 @@ export function PeopleTable({ people, showTracking }: { people: Snapshot["people
             {cols.map((c) => <th key={c.key}>{c.label}</th>)}
             <th>Funnel A application</th><th>Funnel B</th><th>Call with Chris</th><th>Sales outcome</th>
             {showTracking && <th>Ad tracking</th>}
+            {showTracking && <th>9miles media lead tag</th>}
           </tr>
         </thead>
         <tbody>
@@ -60,6 +61,7 @@ export function PeopleTable({ people, showTracking }: { people: Snapshot["people
               <td><span className={pill(p.call, ["Attended"], ["Booked · outcome not marked"], ["No-show"])}>{p.call}</span></td>
               <td><span className={pill(p.sales, ["Customer"], [], ["Lost"])}>{p.sales}</span></td>
               {showTracking && <td>{p.from_ads}</td>}
+              {showTracking && <td><span className={p.lead_tag === "Yes" ? "pill good" : "pill warn"}>{p.lead_tag}</span></td>}
             </tr>
           ))}
         </tbody>
