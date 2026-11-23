@@ -24,7 +24,7 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
       {view === "overview" && (<>
       <div className="grid kpis">
         <Kpi label="Ad Spend" value={usd(k.spend)} hint="Spent on Meta ads" />
-        <Kpi label="Leads" value={num(k.inquiries)} hint="Everyone who came in through the application page, tagged “9miles media lead” in GoHighLevel" delta={{ now: k.inquiries, prev: prevOf(k.inquiries, k.inquiries_chg) }} />
+        <Kpi label="Leads" value={num(k.inquiries)} hint="Everyone who came in through the application page, tagged “9miles media lead” in GoHighLevel" />
         <Kpi label="Qualified Applicants" value={num(k.qualified)} hint="Completed the Funnel A application and passed its qualifying questions" delta={{ now: k.qualified, prev: prevOf(k.qualified, k.qualified_chg) }} />
         <Kpi label="Cost Per Qualified Applicant" value={usd(k.cost_per_qualified)} hint="Ad spend ÷ qualified applicants" delta={{ now: k.cost_per_qualified, prev: prevOf(k.cost_per_qualified, k.cost_per_qualified_chg), lowerIsBetter: true }} />
         <Kpi label="Booked Calls" value={num(k.booked)} hint="Applicants who booked a call with Chris (cancellations excluded)" delta={{ now: k.booked, prev: prevOf(k.booked, k.booked_chg) }} />
