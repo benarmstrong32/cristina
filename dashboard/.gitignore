@@ -8,3 +8,4 @@ data/*.local.json
 data/raw/
 data/snapshot/
 .vercel
+public/ads/

@@ -185,7 +185,10 @@ dash.calc('people', {
       const FIELDS = ['email', 'phone', 'company', 'role', 'team_size', 'challenge', 'budget', 'timeline', 'decision_maker', 'training', 'notes'];
       const forms = list.filter((a) => a.form).sort((a, b) => (a.action === 'Completed application' ? 0 : 1) - (b.action === 'Completed application' ? 0 : 1) || b.at.localeCompare(a.at));
       const answers = Object.fromEntries(FIELDS.map((f) => [f, (forms.find((a) => a.form[f]) || { form: {} }).form[f] || '']));
-      return { person, name: list[0].name, first_date: first, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
+      const byTime = [...list].sort((a, b) => a.at.localeCompare(b.at));
+      const ad_id = (byTime.find((a) => a.ad_id) || {}).ad_id || '';
+      const main = byTime.find((a) => ['Completed application', 'Started application only', 'Lead tagged'].includes(a.action)) || byTime[0];
+      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
     }).sort((a, b) => b.first_date.localeCompare(a.first_date));
   },
 });

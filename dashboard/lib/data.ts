@@ -40,3 +40,14 @@ export async function getSnapshot(c: ClientConfig): Promise<{ snap: Snapshot | n
   }
   return { snap: await saved(c.id) };
 }
+
+export type AdCreative = { format?: string; image?: string; body?: string };
+
+/** Saved ad images and copy (data/snapshot/ad-creatives.json), keyed by Meta ad id. */
+export async function getCreatives(): Promise<Record<string, AdCreative>> {
+  try {
+    return JSON.parse(await readFile(path.join(process.cwd(), "data", "snapshot", "ad-creatives.json"), "utf8"));
+  } catch {
+    return {};
+  }
+}

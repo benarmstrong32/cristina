@@ -29,13 +29,13 @@ function phone(v: string) {
 export function PeopleTable({ people, showTracking }: { people: Snapshot["people"]; showTracking?: boolean }) {
   // Only show answer columns that someone actually filled in.
   const cols = FORM_COLUMNS.filter((c) => people.some((p) => p[c.key]));
-  const span = 6 + cols.length + (showTracking ? 2 : 0);
+  const span = 7 + cols.length + (showTracking ? 2 : 0);
   return (
     <div className="card table-wrap">
       <table className="people">
         <thead>
           <tr>
-            <th>First seen</th><th>Name</th>
+            <th>First seen</th><th>Name</th><th>Ad</th>
             {cols.map((c) => <th key={c.key}>{c.label}</th>)}
             <th>Funnel A application</th><th>Funnel B</th><th>Call with Chris</th><th>Sales outcome</th>
             {showTracking && <th>Ad tracking</th>}
@@ -48,6 +48,7 @@ export function PeopleTable({ people, showTracking }: { people: Snapshot["people
             <tr key={p.person}>
               <td className="tnum">{shortDate(p.first_date)}</td>
               <td><strong>{p.name}</strong></td>
+              <td>{p.ad_name || "—"}</td>
               {cols.map((c) => {
                 const v = String(p[c.key] ?? "");
                 return (

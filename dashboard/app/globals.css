@@ -168,3 +168,19 @@ td.wrap { white-space: normal; min-width: 240px; }
 @media (max-width: 560px) { .range { flex-wrap: wrap; max-width: 100%; } .range a { padding: 5px 8px; } }
 table.people td.wrap { min-width: 220px; max-width: 320px; }
 table.people a { color: var(--accent); text-decoration: none; }
+
+/* Which ad each lead came from */
+.ads-by-lead { display: grid; gap: 12px; }
+.ad-card { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 560px) { .ad-card { grid-template-columns: 1fr; } }
+.ad-creative img { width: 100%; max-width: 160px; border-radius: 8px; border: 1px solid var(--border); display: block; }
+.ad-noimg { width: 160px; max-width: 100%; aspect-ratio: 4 / 5; border-radius: 8px; background: var(--surface-2); color: var(--text-3); display: grid; place-items: center; font-size: 12px; text-align: center; padding: 8px; }
+.ad-body { min-width: 0; display: grid; gap: 6px; }
+.ad-title { font-weight: 600; font-size: 16px; }
+.ad-meta { color: var(--text-2); font-size: 13px; }
+.ad-links a, .ad-people a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.ad-copy summary { cursor: pointer; font-size: 13px; color: var(--text-2); }
+.ad-copy p { white-space: pre-line; font-size: 13px; color: var(--text-2); margin: 6px 0 0; max-width: 70ch; }
+table.ad-people td { padding: 6px 8px; white-space: normal; }
+table.ad-people td.muted { color: var(--text-2); }
+.ad-noimg.short { aspect-ratio: auto; height: 56px; }

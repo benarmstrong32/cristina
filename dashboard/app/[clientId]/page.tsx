@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getClient } from "@/config/clients";
 import { requireAccess } from "@/lib/auth";
-import { getSnapshot } from "@/lib/data";
+import { getCreatives, getSnapshot } from "@/lib/data";
 import { kpiFor, parseRange } from "@/lib/metrics";
 import { shortDate } from "@/lib/format";
 import { Controls, TopBar } from "@/components/ui";
@@ -19,6 +19,7 @@ export default async function ClientView({
   const session = await requireAccess(clientId);
   const range = parseRange((await searchParams).range);
   const { snap, error } = await getSnapshot(client);
+  const creatives = await getCreatives();
   const k = snap ? kpiFor(snap, range) : undefined;
   const isTeam = session.role === "team";
 
@@ -41,7 +42,7 @@ export default async function ClientView({
         <>
           <Freshness snap={snap} clientId={clientId} back={`/${clientId}?range=${range}`} error={error} team={isTeam} />
           <p className="period">{shortDate(k.since)} – {shortDate(k.until)}, compared with the same number of days before</p>
-          <Overview k={k} snap={snap} />
+          <Overview k={k} snap={snap} creatives={creatives} client={client} />
         </>
       )}
     </main>

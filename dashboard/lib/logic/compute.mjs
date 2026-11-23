@@ -43,6 +43,9 @@ export async function computeSnapshot(clientId, rows, extra = {}) {
     }
     if (!progressed) throw new Error("Unresolvable calculation inputs: " + [...pending].join(", "));
   }
+  // Name each person's ad from the Meta ad list.
+  const adName = new Map((values.meta_ads || []).map((a) => [a.ad_id, { name: a.ad_name, adset: a.adset_name, status: a.status }]));
+  const people = values.people.map((p) => ({ ...p, ad_name: adName.get(p.ad_id)?.name || (p.ad_id ? `Ad ${p.ad_id}` : ''), adset_name: adName.get(p.ad_id)?.adset || '' }));
   return {
     clientId,
     generatedAt: new Date().toISOString(),
@@ -51,7 +54,7 @@ export async function computeSnapshot(clientId, rows, extra = {}) {
     kpis: values.kpis,
     highlights: values.highlights,
     daily: values.daily,
-    people: values.people,
+    people,
     calls: values.calls,
     adTable: values.ad_table,
     health: values.health,

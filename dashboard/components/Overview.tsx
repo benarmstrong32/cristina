@@ -3,9 +3,12 @@ import { num, pct, usd } from "@/lib/format";
 import { Funnel, Kpi } from "./ui";
 import { PeopleTable } from "./PeopleTable";
 import { AdsTable } from "./AdsTable";
+import { AdsByLead } from "./AdsByLead";
+import type { AdCreative } from "@/lib/data";
+import type { ClientConfig } from "@/config/clients";
 
 /** The client-facing page: KPIs, highlights, both funnels, reconciliation, definitions, trend. */
-export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
+export function Overview({ k, snap, creatives, client }: { k: KpiRow; snap: Snapshot; creatives: Record<string, AdCreative>; client: ClientConfig }) {
   return (
     <>
       <div className="grid kpis">
@@ -56,6 +59,9 @@ export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
 
       <h2 className="section">People <span className="sub">everyone who entered either funnel since the ads started, and the furthest step they reached</span></h2>
       <PeopleTable people={snap.people} />
+
+      <h2 className="section">Which ad each lead came from <span className="sub">the ad each person clicked before entering the funnel, from GoHighLevel’s tracking</span></h2>
+      <AdsByLead people={snap.people} creatives={creatives} metaAccountId={client.metaAdAccountId} ghlLocationId={client.ghlLocationId} />
 
       <h2 className="section">Ads <span className="sub">each ad’s results over the last 90 days (not affected by the date range)</span></h2>
       <AdsTable ads={snap.adTable} />
