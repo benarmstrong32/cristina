@@ -59,7 +59,7 @@ export default async function TeamView({
                 <Kpi label="Calls booked" value={num(k.booked)} hint="Booked in this period, not cancelled" />
                 <Kpi label="Calls attended" value={num(k.attended)} hint="Marked Showed in GoHighLevel" />
                 <Kpi label="Upcoming" value={num(k.upcoming)} hint="Scheduled, not yet happened" />
-                <Kpi label="Outcome not marked" value={num(k.unmarked)} hint="Call time passed but GoHighLevel still says confirmed" />
+                <Kpi label="Nurturing leads" value={num(k.unmarked)} hint="Booked calls whose time has passed, still marked confirmed in GoHighLevel" />
               </div>
               <h2 className="section">All intro calls <span className="sub">test bookings hidden</span></h2>
               <div className="card table-wrap">
@@ -70,7 +70,7 @@ export default async function TeamView({
                     {snap.calls.map((c) => (
                       <tr key={c.id}>
                         <td className="tnum">{c.start_label}</td><td>{c.name}</td><td className="tnum">{shortDate(c.booked_date)}</td>
-                        <td><span className={pill(c.outcome, ["Attended"], ["Outcome not marked"], ["No-show"])}>{c.outcome}</span></td>
+                        <td><span className={pill(c.outcome, ["Attended"], ["Nurturing lead"], ["No-show"])}>{c.outcome}</span></td>
                       </tr>
                     ))}
                   </tbody>

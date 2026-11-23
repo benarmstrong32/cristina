@@ -180,7 +180,7 @@ dash.calc('people', {
     return [...by.entries()].map(([person, list]) => {
       const first = list.reduce((m, a) => (a.date < m ? a.date : m), list[0].date);
       const funnelA = has(list, 'Qualified') ? 'Completed · qualified' : has(list, 'Re-routed to Funnel B') ? 'Completed · re-routed to Funnel B' : has(list, 'Started application only') ? 'Started, did not finish' : '—';
-      const call = has(list, 'Attended call') ? 'Attended' : has(list, 'No-show') ? 'No-show' : has(list, 'Call outcome not marked') ? 'Booked · outcome not marked' : has(list, 'Booked call') ? 'Booked · upcoming' : has(list, 'Cancelled call') ? 'Cancelled' : '—';
+      const call = has(list, 'Attended call') ? 'Attended' : has(list, 'No-show') ? 'No-show' : has(list, 'Call outcome not marked') ? 'Booked · nurturing lead' : has(list, 'Booked call') ? 'Booked · upcoming' : has(list, 'Cancelled call') ? 'Cancelled' : '—';
       const sales = has(list, 'Customer') ? 'Customer' : has(list, 'Lost') ? 'Lost' : has(list, 'Confirmed qualified') ? 'Confirmed qualified' : '—';
       const FIELDS = ['email', 'phone', 'company', 'role', 'team_size', 'challenge', 'budget', 'timeline', 'decision_maker', 'training', 'notes'];
       const forms = list.filter((a) => a.form).sort((a, b) => (a.action === 'Completed application' ? 0 : 1) - (b.action === 'Completed application' ? 0 : 1) || b.at.localeCompare(a.at));
@@ -188,7 +188,7 @@ dash.calc('people', {
       const byTime = [...list].sort((a, b) => a.at.localeCompare(b.at));
       const ad_id = (byTime.find((a) => a.ad_id) || {}).ad_id || '';
       const main = byTime.find((a) => ['Completed application', 'Started application only', 'Lead tagged'].includes(a.action)) || byTime[0];
-      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : has(list, 'Re-routed to Funnel B') ? 'Did not opt in' : has(list, 'Booked call') ? 'Funnel A qualified' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
+      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : has(list, 'Re-routed to Funnel B') ? 'Did not opt in' : has(list, 'Booked call') ? 'Funnel A qualified' : has(list, 'Qualified') ? 'Nurture Funnel A lead' : has(list, 'Started application only') ? 'Research lead for email or phone number & make a manual reach out if possible' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
     }).sort((a, b) => b.first_date.localeCompare(a.first_date));
   },
 });
@@ -201,7 +201,7 @@ dash.calc('calls', {
     const outcome = new Map();
     for (const a of actions) if (a.call_id && a.action !== 'Booked call') outcome.set(a.call_id, a.action);
     return actions.filter((a) => a.action === 'Booked call' || a.action === 'Cancelled call').map((a) => {
-      const o = a.action === 'Cancelled call' ? 'Cancelled' : ({ 'Attended call': 'Attended', 'No-show': 'No-show', 'Call outcome not marked': 'Outcome not marked' })[outcome.get(a.call_id)] || 'Upcoming';
+      const o = a.action === 'Cancelled call' ? 'Cancelled' : ({ 'Attended call': 'Attended', 'No-show': 'No-show', 'Call outcome not marked': 'Nurturing lead' })[outcome.get(a.call_id)] || 'Upcoming';
       return { id: a.call_id, name: a.name, booked_date: a.date, call_at: a.call_at, start_label: new Date(a.call_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) + ' ET', outcome: o };
     }).sort((a, b) => b.call_at.localeCompare(a.call_at));
   },
@@ -294,7 +294,7 @@ dash.calc('health', {
     const list = (rows) => rows.map((r) => r.name).join(', ');
     const untagged = people.filter((p) => p.funnel_a !== '—' && p.lead_tag !== 'Yes');
     return [
-      { check: 'Call outcomes are marked', ok: unmarked.length ? 'Needs attention' : 'OK', detail: unmarked.length ? `${unmarked.length} past call(s) still say confirmed: ${unmarked.map((a) => a.name).join(', ')}. Mark Showed or No-show so attended calls count.` : 'Every past call has an outcome.' },
+      { check: 'Past calls are updated in GoHighLevel', ok: unmarked.length ? 'Needs attention' : 'OK', detail: unmarked.length ? `${unmarked.length} past call(s) show as nurturing leads: ${unmarked.map((a) => a.name).join(', ')}. When the call happens, mark it Showed or No-show in GoHighLevel so attended calls count.` : 'Every past call has an outcome.' },
       { check: 'Qualified applicants have booked', ok: qualNoCall.length ? 'Needs attention' : 'OK', detail: qualNoCall.length ? `Qualified but no call booked: ${list(qualNoCall)}. Worth a follow-up.` : 'Every qualified applicant has booked.' },
       { check: 'Completed applications are in the sales pipeline', ok: notInPipe.length ? 'Needs attention' : 'OK', detail: notInPipe.length ? `No opportunity in New Velocity Sales: ${list(notInPipe)}. Confirmed qualification and sales outcomes are read from the pipeline.` : 'All completed applications have an opportunity.' },
       { check: 'Applications carry ad tracking', ok: untracked.length ? 'Needs attention' : 'OK', detail: untracked.length ? `No Facebook/Instagram tracking on: ${list(untracked)}. They count in GoHighLevel but not in Meta.` : 'All applications are tracked to an ad.' },

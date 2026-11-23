@@ -187,3 +187,4 @@ table.ad-people td.muted { color: var(--text-2); }
 .subtabs + .period { margin-top: 0; }
 .subtabs + .freshness { margin-top: 0; }
 .shell > .subtabs { margin-top: 0; }
+table.people td.wrap .pill { white-space: normal; display: inline-block; line-height: 1.35; padding: 3px 10px; border-radius: 10px; }
