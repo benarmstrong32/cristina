@@ -184,3 +184,6 @@ table.people a { color: var(--accent); text-decoration: none; }
 table.ad-people td { padding: 6px 8px; white-space: normal; }
 table.ad-people td.muted { color: var(--text-2); }
 .ad-noimg.short { aspect-ratio: auto; height: 56px; }
+.subtabs + .period { margin-top: 0; }
+.subtabs + .freshness { margin-top: 0; }
+.shell > .subtabs { margin-top: 0; }

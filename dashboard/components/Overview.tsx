@@ -7,10 +7,21 @@ import { AdsByLead } from "./AdsByLead";
 import type { AdCreative } from "@/lib/data";
 import type { ClientConfig } from "@/config/clients";
 
-/** The client-facing page: KPIs, highlights, both funnels, reconciliation, definitions, trend. */
-export function Overview({ k, snap, creatives, client }: { k: KpiRow; snap: Snapshot; creatives: Record<string, AdCreative>; client: ClientConfig }) {
+export const CLIENT_TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "funnels", label: "Funnels" },
+  { key: "people", label: "People" },
+  { key: "sources", label: "Which ad" },
+  { key: "ads", label: "Ads" },
+  { key: "counting", label: "How we count" },
+] as const;
+export type ClientTab = (typeof CLIENT_TABS)[number]["key"];
+
+/** The client-facing page, one tab at a time. */
+export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap: Snapshot; creatives: Record<string, AdCreative>; client: ClientConfig; view: ClientTab }) {
   return (
     <>
+      {view === "overview" && (<>
       <div className="grid kpis">
         <Kpi label="Ad Spend" value={usd(k.spend)} hint="Spent on Meta ads" />
         <Kpi label="Leads" value={num(k.inquiries)} hint="Everyone who came in through the application page, tagged “9miles media lead” in GoHighLevel" delta={{ now: k.inquiries, prev: prevOf(k.inquiries, k.inquiries_chg) }} />
@@ -35,6 +46,9 @@ export function Overview({ k, snap, creatives, client }: { k: KpiRow; snap: Snap
         </>
       )}
 
+      </>)}
+
+      {view === "funnels" && (<>
       <h2 className="section">Funnel A: application to sale <span className="sub">people who reached each step in this period</span></h2>
       <Funnel
         steps={[
@@ -57,15 +71,38 @@ export function Overview({ k, snap, creatives, client }: { k: KpiRow; snap: Snap
         <Kpi label="Of those, disqualified in Funnel A first" value={num(k.funnel_b_from_dq)} hint="Applied, didn’t qualify, then took the X-Ray offer" />
       </div>
 
+      </>)}
+
+      {view === "people" && (<>
       <h2 className="section">People <span className="sub">everyone who entered either funnel since the ads started, and the furthest step they reached</span></h2>
       <PeopleTable people={snap.people} />
 
+      </>)}
+
+      {view === "sources" && (<>
       <h2 className="section">Which ad each lead came from <span className="sub">the ad each person clicked before entering the funnel, from GoHighLevel’s tracking</span></h2>
       <AdsByLead people={snap.people} creatives={creatives} metaAccountId={client.metaAdAccountId} ghlLocationId={client.ghlLocationId} />
 
+      </>)}
+
+      {view === "ads" && (<>
       <h2 className="section">Ads <span className="sub">each ad’s results over the last 90 days (not affected by the date range)</span></h2>
       <AdsTable ads={snap.adTable} />
 
+      <details className="card expand" style={{ marginTop: 16 }} open>
+        <summary>Ad performance in this period</summary>
+        <div className="mini">
+          <Mini label="Impressions" value={num(k.impressions)} />
+          <Mini label="Link clicks" value={num(k.link_clicks)} />
+          <Mini label="Link CTR" value={pct(k.ctr, 2)} />
+          <Mini label="Cost per link click" value={usd(k.cpc, true)} />
+          <Mini label="CPM" value={usd(k.cpm, true)} />
+          <Mini label="Landing page views" value={num(k.landing_page_views)} />
+        </div>
+      </details>
+      </>)}
+
+      {view === "counting" && (<>
       <h2 className="section">Why Meta shows a different number</h2>
       <div className="card table-wrap">
         <table>
@@ -94,18 +131,7 @@ export function Overview({ k, snap, creatives, client }: { k: KpiRow; snap: Snap
           <dt>Left out</dt><dd>Internal test records and blank records with no name or email.</dd>
         </dl>
       </details>
-
-      <details className="card expand" style={{ marginTop: 16 }}>
-        <summary>Ad Performance</summary>
-        <div className="mini">
-          <Mini label="Impressions" value={num(k.impressions)} />
-          <Mini label="Link clicks" value={num(k.link_clicks)} />
-          <Mini label="Link CTR" value={pct(k.ctr, 2)} />
-          <Mini label="Cost per link click" value={usd(k.cpc, true)} />
-          <Mini label="CPM" value={usd(k.cpm, true)} />
-          <Mini label="Landing page views" value={num(k.landing_page_views)} />
-        </div>
-      </details>
+      </>)}
     </>
   );
 }
