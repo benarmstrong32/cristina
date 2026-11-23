@@ -16,7 +16,8 @@ export function AdsByLead({ people, creatives, metaAccountId, ghlLocationId }: {
   people: Person[]; creatives: Record<string, AdCreative>; metaAccountId: string; ghlLocationId: string;
 }) {
   const groups = new Map<string, Person[]>();
-  for (const p of people) {
+  // Only people GoHighLevel can tie to a specific ad.
+  for (const p of people.filter((x) => x.ad_id)) {
     const k = p.ad_id || "";
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k)!.push(p);
