@@ -28,6 +28,8 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
         <Kpi label="Partial Applications" value={num(Math.max(0, k.started - k.submitted))} hint="Left their contact details on the application but didn’t submit it. Included in Leads." />
         <Kpi label="Qualified Applicants" value={num(k.qualified)} hint="Completed the Funnel A application and passed its qualifying questions" delta={{ now: k.qualified, prev: prevOf(k.qualified, k.qualified_chg) }} />
         <Kpi label="Re-routed to Funnel B" value={num(k.disqualified)} hint={`Completed the application and were re-routed to the X-Ray offer by the qualifier form. ${k.funnel_b} opted in.`} />
+        <Kpi label="Got the Free X-Ray PDF" value={num(k.funnel_b)} hint="Funnel B opt-ins who requested the free X-Ray PDF. GoHighLevel doesn’t record whether they opened it." />
+        <Kpi label="Purchased the X-Ray Course" value={num(k.funnel_b_purchases)} hint={k.funnel_b_purchases ? `Funnel B opt-ins who bought the course (${usd(k.funnel_b_revenue)} in sales)` : "Funnel B opt-ins who bought the course"} />
         <Kpi label="Cost Per Qualified Applicant" value={usd(k.cost_per_qualified)} hint="Ad spend ÷ qualified applicants" delta={{ now: k.cost_per_qualified, prev: prevOf(k.cost_per_qualified, k.cost_per_qualified_chg), lowerIsBetter: true }} />
         <Kpi label="Booked Calls" value={num(k.booked)} hint="Applicants who booked a call with Chris (cancellations excluded)" delta={{ now: k.booked, prev: prevOf(k.booked, k.booked_chg) }} />
         <Kpi label="Cost Per Booked Call" value={usd(k.cost_per_booked)} hint="Ad spend ÷ booked calls" delta={{ now: k.cost_per_booked, prev: prevOf(k.cost_per_booked, k.cost_per_booked_chg), lowerIsBetter: true }} />

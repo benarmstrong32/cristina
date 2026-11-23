@@ -59,6 +59,14 @@ dash.loader('ghl_funnel_b', { description: 'Keeps one row per Funnel B (X-Ray) o
   }), cut: !!(page.meta && page.meta.nextPage) };
 }});
 
+dash.loader('ghl_orders', { description: 'Keeps one row per paid order with the funnel it came from.', fn: ({ answer }) => {
+  const x = typeof answer === 'string' ? JSON.parse(answer) : answer;
+  if (!x || x.success === false) throw new Error((x && (x.error || (x.data && x.data.message))) || 'GoHighLevel returned an error');
+  const d = x.data || x;
+  const list = Array.isArray(d.data) ? d.data : (d.orders || []);
+  return list.map((o) => ({ order_id: o._id || o.id, contact_id: o.contactId || '', name: o.contactName || '', email: o.contactEmail || '', amount: Number(o.amount || 0), source_name: o.sourceName || '', live: o.liveMode !== false, paid: (o.paymentStatus || '') === 'paid', created_at: o.createdAt }));
+}});
+
 dash.loader('ghl_opps', { description: 'Keeps one row per opportunity in the New Velocity Sales pipeline.', fn: ({ answer }) => {
   const x = typeof answer === 'string' ? JSON.parse(answer) : answer;
   if (!x || x.success === false) throw new Error((x && (x.error || (x.data && x.data.message))) || 'GoHighLevel returned an error');
@@ -86,8 +94,8 @@ dash.loader('ghl_events', { description: 'Keeps one row per booking on the intro
 dash.calc('actions', {
   title: 'What each person did',
   description: 'Every step a real (non-test) person took: started or completed the application, qualified or not, opted into Funnel B, booked or attended a call, and sales outcomes.',
-  inputs: ['ghl_contacts', 'ghl_surveys', 'ghl_funnel_b', 'ghl_events', 'ghl_opps', 'ghl_stages'],
-  fn: (contacts, surveys, funnelB, events, opps, stages) => {
+  inputs: ['ghl_contacts', 'ghl_surveys', 'ghl_funnel_b', 'ghl_events', 'ghl_opps', 'ghl_stages', 'ghl_orders'],
+  fn: (contacts, surveys, funnelB, events, opps, stages, orders) => {
     const FUNNEL_A_SURVEYS = ['79sQ7ZSdQ93EHLq5YTEr', 'MifJfW1QNI0juzxfQg70']; // Sales Growth Call Qualifier (short, long)
     const STAFF_DOMAINS = ['9milesmedia.com', 'mynewvelocity.com', 'example.com'];
     const STAFF_CONTACT_IDS = ['lbRiEDZvxRs5kiGH0Ykg'];
@@ -165,6 +173,13 @@ dash.calc('actions', {
       if (o.status === 'won' || stage === 'closed') add(p, nm, o.contact_id, 'Customer', o.status_changed_at, ads, { value: o.value });
       else if (o.status === 'lost') add(p, nm, o.contact_id, 'Lost', o.status_changed_at, ads);
     }
+    // Funnel B course purchases: paid, live-mode orders from the X-Ray funnel.
+    for (const o of orders || []) {
+      if (!o.paid || !o.live || !/funnel b/i.test(o.source_name)) continue;
+      if (staffIds.has(o.contact_id) || isStaff(o.contact_id, o.email, o.name)) continue;
+      const p = who(o.contact_id, o.name, o.email); if (!p) continue;
+      add(p, nameOf(p) || o.name, o.contact_id, 'Purchased X-Ray course', o.created_at, adsOf(p), { value: o.amount });
+    }
     return out.sort((a, b) => b.at.localeCompare(a.at));
   },
 });
@@ -188,7 +203,7 @@ dash.calc('people', {
       const byTime = [...list].sort((a, b) => a.at.localeCompare(b.at));
       const ad_id = (byTime.find((a) => a.ad_id) || {}).ad_id || '';
       const main = byTime.find((a) => ['Completed application', 'Started application only', 'Lead tagged'].includes(a.action)) || byTime[0];
-      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : has(list, 'Re-routed to Funnel B') ? 'Did not opt in' : has(list, 'Booked call') ? 'Funnel A qualified' : has(list, 'Qualified') ? 'Nurture Funnel A lead' : has(list, 'Started application only') ? 'Research lead for email or phone number & make a manual reach out if possible' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
+      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Purchased X-Ray course') ? 'Purchased course' : has(list, 'Funnel B opt-in') ? 'Opted in' : has(list, 'Re-routed to Funnel B') ? 'Did not opt in' : has(list, 'Booked call') ? 'Funnel A qualified' : has(list, 'Qualified') ? 'Nurture Funnel A lead' : has(list, 'Started application only') ? 'Research lead for email or phone number & make a manual reach out if possible' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
     }).sort((a, b) => b.first_date.localeCompare(a.first_date));
   },
 });
@@ -236,7 +251,7 @@ dash.calc('kpis', {
         booked: booked.size, attended: people('Attended call').size, no_show: people('No-show').size,
         confirmed: people('Confirmed qualified').size, customers: new Set(customers.map((a) => a.person)).size,
         revenue: customers.reduce((s, a) => s + (a.value || 0), 0),
-        funnel_b: fb.size, funnel_b_from_dq: [...fb].filter((p) => dqEver.has(p)).length,
+        funnel_b: fb.size, funnel_b_purchases: people('Purchased X-Ray course').size, funnel_b_revenue: inR.filter((a) => a.action === 'Purchased X-Ray course').reduce((s2, a) => s2 + (a.value || 0), 0), funnel_b_from_dq: [...fb].filter((p) => dqEver.has(p)).length,
         inquiries: people('Lead tagged').size,
         cost_per_qualified: div(spend, qualified.size), cost_per_booked: div(spend, booked.size), cost_per_inquiry: div(spend, people('Lead tagged').size),
         ad_form_events: adForms.length, ad_form_people: new Set(adForms.map((a) => a.person)).size,

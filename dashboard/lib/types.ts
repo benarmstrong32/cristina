@@ -6,7 +6,7 @@ export type KpiRow = {
   ctr: number | null; cpc: number | null; cpm: number | null;
   started: number; submitted: number; qualified: number; disqualified: number;
   booked: number; attended: number; no_show: number; confirmed: number; customers: number; revenue: number;
-  funnel_b: number; funnel_b_from_dq: number; inquiries: number;
+  funnel_b: number; funnel_b_purchases: number; funnel_b_revenue: number; funnel_b_from_dq: number; inquiries: number;
   cost_per_qualified: number | null; cost_per_booked: number | null; cost_per_inquiry: number | null;
   ad_form_events: number; ad_form_people: number; untracked_submissions: number;
   upcoming: number; unmarked: number;

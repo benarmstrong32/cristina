@@ -69,7 +69,7 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
 
   // GoHighLevel.
   const start = new Date(`${SINCE}T00:00:00Z`).getTime();
-  const [contacts, surveys, funnelB, events, opps, pipelines] = await Promise.all([
+  const [contacts, surveys, funnelB, events, opps, pipelines, orders] = await Promise.all([
     pages((page) => ghl("/contacts/search", ghlToken, "2021-07-28", {
       method: "POST",
       body: JSON.stringify({ locationId: loc, page, pageLimit: 100, filters: [{ field: "dateAdded", operator: "range", value: { gte: `${SINCE}T00:00:00Z`, lte: `${until}T23:59:59Z` } }], sort: [{ field: "dateAdded", direction: "desc" }] }),
@@ -79,6 +79,7 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
     ghl(`/calendars/events?locationId=${loc}&calendarId=${c.introCalendarId}&startTime=${start}&endTime=${Date.UTC(2030, 11, 31)}`, ghlToken, "2021-04-15"),
     pages((page) => ghl(`/opportunities/search?location_id=${loc}&pipeline_id=${c.pipelineId}&limit=100&page=${page}`, ghlToken, "2021-07-28"), (a) => (a.opportunities ?? []).length === 100),
     ghl(`/opportunities/pipelines?locationId=${loc}`, ghlToken, "2021-07-28"),
+    ghl(`/payments/orders?altId=${loc}&altType=location&startAt=${SINCE}&limit=100`, ghlToken, "2021-07-28"),
   ]);
   // One page at a time through the loaders, with "next page" hints removed.
   const strip = (a: any) => ({ ...a, meta: {} });
@@ -92,6 +93,7 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
     ghl_events: await rowsFrom("ghl_events", [events]),
     ghl_opps: await rowsFrom("ghl_opps", opps),
     ghl_stages: await rowsFrom("ghl_stages", [pipelines]),
+    ghl_orders: await rowsFrom("ghl_orders", [orders]),
   };
   return computeSnapshot(c.id, rows, { source: "live" });
 }

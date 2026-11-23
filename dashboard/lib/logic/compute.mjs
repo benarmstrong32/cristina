@@ -3,7 +3,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export const DATASETS = ["meta_daily", "meta_ads", "ghl_contacts", "ghl_surveys", "ghl_funnel_b", "ghl_events", "ghl_opps", "ghl_stages"];
+export const DATASETS = ["meta_daily", "meta_ads", "ghl_contacts", "ghl_surveys", "ghl_funnel_b", "ghl_events", "ghl_opps", "ghl_stages", "ghl_orders"];
 
 let registry = null;
 async function logic() {
