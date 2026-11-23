@@ -188,7 +188,7 @@ dash.calc('people', {
       const byTime = [...list].sort((a, b) => a.at.localeCompare(b.at));
       const ad_id = (byTime.find((a) => a.ad_id) || {}).ad_id || '';
       const main = byTime.find((a) => ['Completed application', 'Started application only', 'Lead tagged'].includes(a.action)) || byTime[0];
-      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
+      return { person, name: list[0].name, first_date: first, ad_id, contact_id: main.contact_id, lead_tag: has(list, 'Lead tagged') ? 'Yes' : 'No', ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : has(list, 'Re-routed to Funnel B') ? 'Did not opt in' : has(list, 'Booked call') ? 'Funnel A qualified' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
     }).sort((a, b) => b.first_date.localeCompare(a.first_date));
   },
 });

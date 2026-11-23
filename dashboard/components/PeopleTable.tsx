@@ -58,7 +58,7 @@ export function PeopleTable({ people, showTracking }: { people: Snapshot["people
                 );
               })}
               <td><span className={pill(p.funnel_a, ["Completed · qualified"], ["Started, did not finish"])}>{p.funnel_a}</span></td>
-              <td>{p.funnel_b}</td>
+              <td>{p.funnel_b === "Did not opt in" ? <span className="pill warn">{p.funnel_b}</span> : p.funnel_b === "Opted in" || p.funnel_b === "Funnel A qualified" ? <span className="pill good">{p.funnel_b}</span> : p.funnel_b}</td>
               <td><span className={pill(p.call, ["Attended"], ["Booked · outcome not marked"], ["No-show"])}>{p.call}</span></td>
               <td><span className={pill(p.sales, ["Customer"], [], ["Lost"])}>{p.sales}</span></td>
               {showTracking && <td>{p.from_ads}</td>}
