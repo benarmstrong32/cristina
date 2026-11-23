@@ -9,7 +9,7 @@ export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
   return (
     <>
       <div className="grid kpis">
-        <Kpi label="Ad Spend" value={usd(k.spend)} hint="Spent on Meta ads" delta={{ now: k.spend, prev: prevOf(k.spend, k.spend_chg) }} />
+        <Kpi label="Ad Spend" value={usd(k.spend)} hint="Spent on Meta ads" />
         <Kpi label="Leads" value={num(k.inquiries)} hint="Everyone who came in through the application page, tagged “9miles media lead” in GoHighLevel" delta={{ now: k.inquiries, prev: prevOf(k.inquiries, k.inquiries_chg) }} />
         <Kpi label="Qualified Applicants" value={num(k.qualified)} hint="Completed the Funnel A application and passed its qualifying questions" delta={{ now: k.qualified, prev: prevOf(k.qualified, k.qualified_chg) }} />
         <Kpi label="Cost Per Qualified Applicant" value={usd(k.cost_per_qualified)} hint="Ad spend ÷ qualified applicants" delta={{ now: k.cost_per_qualified, prev: prevOf(k.cost_per_qualified, k.cost_per_qualified_chg), lowerIsBetter: true }} />
