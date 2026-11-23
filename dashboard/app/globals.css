@@ -316,3 +316,32 @@ tbody tr:hover { background: var(--t-lead-bg); }
 
 /* Notices */
 .notice { border-style: solid; border-left: 4px solid var(--accent); background: var(--t-spend-bg); }
+
+/* ───────── Calmer pass: one accent, color only where it carries meaning ───────── */
+.kpi { border-top: 1px solid var(--border); background: var(--surface); }
+.kpi .value { color: var(--text); }
+.kpi .label::before { width: 7px; height: 7px; }
+.tone-cost .label::before, .kpi.tone-neutral .label::before { background: var(--text-3); }
+
+.kpi.highlight { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-left: 3px solid var(--accent); }
+.kpi.highlight::after { display: none; }
+.kpi.highlight .label { color: var(--text-2); }
+.kpi.highlight .label::before { background: var(--accent); }
+.kpi.highlight .value { color: var(--text); }
+.kpi.highlight .hint { color: var(--text-3); }
+
+.range a[aria-current="true"] { background: var(--navy); box-shadow: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .range a[aria-current="true"] { background: var(--accent); } }
+.subtabs a[aria-current="page"] { box-shadow: none; }
+.freshness { background: var(--surface); border-left: 3px solid var(--border); }
+.notice { background: var(--surface); border-left: 3px solid var(--border); }
+h2.section::before { background: var(--accent); }
+
+:root { --funnel-1: var(--accent); --funnel-2: var(--accent); --funnel-3: var(--accent); --funnel-4: var(--accent); --funnel-5: var(--accent); }
+.f-bar { background-image: none; }
+
+tbody tr:hover { background: var(--surface-2); }
+th { background: transparent; }
+.ad-card { border-left: 1px solid var(--border); }
+.ad-creative img { box-shadow: 0 2px 8px rgb(13 27 46 / 0.12); }
+.ad-title { color: var(--text); }
