@@ -12,4 +12,4 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/((?!login|api/login|_next|favicon.ico).*)"] };
+export const config = { matcher: ["/((?!login|api/login|_next|favicon.ico|icon.svg|apple-icon.png).*)"] };
