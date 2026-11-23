@@ -110,7 +110,6 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
             <tr><td>Leads reported by Meta</td><td className="r tnum">{num(k.meta_leads)}</td><td className="wrap">Every form submission Meta’s pixel saw from an ad click. One person who fills in two forms counts twice.</td></tr>
             <tr><td>Form submissions from ads in GoHighLevel</td><td className="r tnum">{num(k.ad_form_events)}</td><td className="wrap">Application submissions plus Funnel B opt-ins with Facebook or Instagram ad tracking. This should match Meta closely.</td></tr>
             <tr><td>People behind those submissions</td><td className="r tnum">{num(k.ad_form_people)}</td><td className="wrap">The same submissions, counted once per person.</td></tr>
-            <tr><td>Submissions with no ad tracking</td><td className="r tnum">{num(k.untracked_submissions)}</td><td className="wrap">Real applicants whose visit lost its ad tags. GoHighLevel counts them; Meta may not.</td></tr>
           </tbody>
         </table>
       </div>
@@ -127,7 +126,6 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
           <dt>Customer</dt><dd>The opportunity is marked Won or moved to Closed.</dd>
           <dt>Re-routed to Funnel B</dt><dd>Based on their answers to the qualifier form, sent to the X-Ray offer (Funnel B) instead of booking a call, and opted in.</dd>
           <dt>Lead</dt><dd>Anyone who came into GoHighLevel through the application page, whether or not they finished it or booked a call. Each is tagged “9miles media lead” in GoHighLevel.</dd>
-          <dt>Left out</dt><dd>Internal test records and blank records with no name or email.</dd>
         </dl>
       </details>
       </>)}
