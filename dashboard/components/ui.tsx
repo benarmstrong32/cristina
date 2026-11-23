@@ -7,8 +7,11 @@ export function TopBar({ client, session }: { client: ClientConfig; session: Ses
   return (
     <header className="topbar">
       <div className="brand">
-        <h1>{client.name}</h1>
-        <span className="by">Ad results</span>
+        <img className="brand-icon" src="/icon.svg" alt="" width={36} height={36} />
+        <div>
+          <h1>{client.name}</h1>
+          <span className="by">Ad results scorecard</span>
+        </div>
       </div>
       <div className="who">
         <span>{session.name}</span>
@@ -52,11 +55,13 @@ export function Controls({
 
 type Delta = { now: number | null; prev: number | null; lowerIsBetter?: boolean } | undefined;
 
+export type Tone = "spend" | "lead" | "partial" | "qualified" | "reroute" | "booked" | "cost" | "pdf" | "sale" | "neutral";
+
 export function Kpi({
-  label, value, hint, delta, muted, tag,
-}: { label: string; value: string; hint?: string; delta?: Delta; muted?: boolean; tag?: string }) {
+  label, value, hint, delta, muted, tag, tone = "neutral",
+}: { label: string; value: string; hint?: string; delta?: Delta; muted?: boolean; tag?: string; tone?: Tone }) {
   return (
-    <div className="card kpi">
+    <div className={`card kpi tone-${tone}`}>
       <div className="label">
         {label}
         {tag && <span className="tag">{tag}</span>}
