@@ -260,13 +260,19 @@ dash.calc('kpis', {
         unmarked: actions.filter((a) => a.action === 'Call outcome not marked').length,
       };
     };
-    return [7, 14, 30, 90].map((n) => {
+    const rows = [7, 14, 30, 90].map((n) => {
       const cur = period(shift(until, -(n - 1)), until);
       const prev = period(shift(until, -(2 * n - 1)), shift(until, -n));
       const out = Object.assign({ range: n + 'd' }, cur);
       for (const k of ['spend', 'inquiries', 'qualified', 'booked', 'cost_per_qualified', 'cost_per_booked']) out[k + '_chg'] = chg(cur[k], prev[k]);
       return out;
     });
+    // Maximum: from the first day with ad spend or funnel activity to the latest day.
+    const starts = days.filter((d) => d.spend > 0).map((d) => d.date).concat(actions.map((a) => a.date)).sort();
+    const max = Object.assign({ range: 'max' }, period(starts[0] || until, until));
+    for (const k of ['spend', 'inquiries', 'qualified', 'booked', 'cost_per_qualified', 'cost_per_booked']) max[k + '_chg'] = null;
+    rows.push(max);
+    return rows;
   },
 });
 

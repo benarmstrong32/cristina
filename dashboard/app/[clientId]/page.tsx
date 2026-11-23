@@ -50,7 +50,7 @@ export default async function ClientView({
             ))}
           </nav>
           <Freshness snap={snap} clientId={clientId} back={`/${clientId}?range=${range}&view=${view}`} error={error} team={isTeam} />
-          <p className="period">{shortDate(k.since)} – {shortDate(k.until)}, compared with the same number of days before</p>
+          <p className="period">{shortDate(k.since)} – {shortDate(k.until)}{range === "max" ? ", since the ads started" : ", compared with the same number of days before"}</p>
           <Overview k={k} snap={snap} creatives={creatives} client={client} view={view} />
         </>
       )}

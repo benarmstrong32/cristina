@@ -1,7 +1,7 @@
 import type { Snapshot } from "@/lib/types";
 import { num, pct, usd } from "@/lib/format";
 
-/** Each ad with spend in the last 90 days: Meta numbers beside GoHighLevel results. */
+/** Each ad with spend since the campaign started: Meta numbers beside GoHighLevel results. */
 export function AdsTable({ ads }: { ads: Snapshot["adTable"] }) {
   return (
     <div className="card table-wrap">
@@ -14,7 +14,7 @@ export function AdsTable({ ads }: { ads: Snapshot["adTable"] }) {
           </tr>
         </thead>
         <tbody>
-          {ads.length === 0 && <tr><td colSpan={10}>No ad spend in the last 90 days.</td></tr>}
+          {ads.length === 0 && <tr><td colSpan={10}>No ad spend yet.</td></tr>}
           {ads.map((a) => (
             <tr key={a.ad_id}>
               <td>{a.ad_name}</td>

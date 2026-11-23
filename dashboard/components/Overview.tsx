@@ -88,7 +88,7 @@ export function Overview({ k, snap, creatives, client, view }: { k: KpiRow; snap
       </>)}
 
       {view === "ads" && (<>
-      <h2 className="section">Active ads <span className="sub">ads running now, with results over the last 90 days (not affected by the date range)</span></h2>
+      <h2 className="section">Active ads <span className="sub">ads running now, with results since the campaign started (not affected by the date range)</span></h2>
       <AdsTable ads={snap.adTable.filter((a) => a.status === "Active")} />
 
       <details className="card expand" style={{ marginTop: 16 }} open>

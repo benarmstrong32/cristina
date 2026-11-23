@@ -81,7 +81,7 @@ export default async function TeamView({
 
           {tab === "ads" && (
             <>
-              <p className="period">Each ad’s results over the last 90 days (not affected by the range picker).</p>
+              <p className="period">Each ad’s results since the campaign started (not affected by the range picker).</p>
               <AdsTable ads={snap.adTable} />
             </>
           )}

@@ -3,9 +3,8 @@ export type { RangeKey } from "./types";
 
 export const RANGES: { key: RangeKey; label: string }[] = [
   { key: "7d", label: "Last 7 days" },
-  { key: "14d", label: "Last 14 days" },
   { key: "30d", label: "Last 30 days" },
-  { key: "90d", label: "Last 90 days" },
+  { key: "max", label: "Maximum" },
 ];
 
 export function parseRange(v: string | undefined): RangeKey {

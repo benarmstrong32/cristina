@@ -59,8 +59,8 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
 
   // Meta, reshaped to the field names the shared loaders read.
   const [dayRows, adRows, adStatus] = await Promise.all([
-    graph(`act_${c.metaAdAccountId}/insights?level=account&time_increment=1&date_preset=last_90d&fields=spend,impressions,inline_link_clicks,actions`, meta),
-    graph(`act_${c.metaAdAccountId}/insights?level=ad&date_preset=last_90d&fields=ad_id,ad_name,adset_name,spend,impressions,inline_link_clicks,actions`, meta),
+    graph(`act_${c.metaAdAccountId}/insights?level=account&time_increment=1&date_preset=maximum&fields=spend,impressions,inline_link_clicks,actions`, meta),
+    graph(`act_${c.metaAdAccountId}/insights?level=ad&date_preset=maximum&fields=ad_id,ad_name,adset_name,spend,impressions,inline_link_clicks,actions`, meta),
     graph(`act_${c.metaAdAccountId}/ads?fields=id,effective_status`, meta),
   ]);
   const status = new Map(adStatus.map((a) => [a.id, a.effective_status]));
