@@ -166,3 +166,5 @@ td.wrap { white-space: normal; min-width: 240px; }
 .freshness { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; font-size: 13px; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 12px; }
 .fresh-err { color: var(--critical); }
 @media (max-width: 560px) { .range { flex-wrap: wrap; max-width: 100%; } .range a { padding: 5px 8px; } }
+table.people td.wrap { min-width: 220px; max-width: 320px; }
+table.people a { color: var(--accent); text-decoration: none; }

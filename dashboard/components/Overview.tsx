@@ -1,18 +1,16 @@
 import type { KpiRow, Snapshot } from "@/lib/types";
 import { num, pct, usd } from "@/lib/format";
 import { Funnel, Kpi } from "./ui";
-import { BarChart } from "./BarChart";
 import { PeopleTable } from "./PeopleTable";
 import { AdsTable } from "./AdsTable";
 
 /** The client-facing page: KPIs, highlights, both funnels, reconciliation, definitions, trend. */
 export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
-  const daily = snap.daily.filter((d) => d.date >= k.since && d.date <= k.until);
   return (
     <>
       <div className="grid kpis">
         <Kpi label="Ad Spend" value={usd(k.spend)} hint="Spent on Meta ads" delta={{ now: k.spend, prev: prevOf(k.spend, k.spend_chg) }} />
-        <Kpi label="Inquiries" value={num(k.inquiries)} hint="People who completed the application or opted into Funnel B" delta={{ now: k.inquiries, prev: prevOf(k.inquiries, k.inquiries_chg) }} />
+        <Kpi label="Leads" value={num(k.inquiries)} hint="People who completed the application or opted into Funnel B" delta={{ now: k.inquiries, prev: prevOf(k.inquiries, k.inquiries_chg) }} />
         <Kpi label="Qualified Applicants" value={num(k.qualified)} hint="Completed the Funnel A application and passed its qualifying questions" delta={{ now: k.qualified, prev: prevOf(k.qualified, k.qualified_chg) }} />
         <Kpi label="Cost Per Qualified Applicant" value={usd(k.cost_per_qualified)} hint="Ad spend ÷ qualified applicants" delta={{ now: k.cost_per_qualified, prev: prevOf(k.cost_per_qualified, k.cost_per_qualified_chg), lowerIsBetter: true }} />
         <Kpi label="Booked Calls" value={num(k.booked)} hint="Applicants who booked a call with Chris (cancellations excluded)" delta={{ now: k.booked, prev: prevOf(k.booked, k.booked_chg) }} />
@@ -86,22 +84,10 @@ export function Overview({ k, snap }: { k: KpiRow; snap: Snapshot }) {
           <dt>Confirmed qualified</dt><dd>After the call, the opportunity reached Proposal Sent or Closed in the New Velocity Sales pipeline.</dd>
           <dt>Customer</dt><dd>The opportunity is marked Won or moved to Closed.</dd>
           <dt>Funnel B contact</dt><dd>Opted into the X-Ray offer form.</dd>
-          <dt>Inquiry</dt><dd>Anyone who completed the application or opted into Funnel B, counted once.</dd>
+          <dt>Lead</dt><dd>Anyone who completed the application or opted into Funnel B, counted once.</dd>
           <dt>Left out</dt><dd>Internal test records and blank records with no name or email.</dd>
         </dl>
       </details>
-
-      <h2 className="section">Daily trend</h2>
-      <div className="grid two">
-        <div className="card">
-          <p className="chart-title">Ad spend per day</p>
-          <BarChart data={daily.map((d) => ({ date: d.date, value: d.spend }))} color="var(--series-spend)" format="usd" label="Daily ad spend" />
-        </div>
-        <div className="card">
-          <p className="chart-title">Completed applications per day</p>
-          <BarChart data={daily.map((d) => ({ date: d.date, value: d.applications }))} color="var(--series-leads)" format="int" label="Daily completed applications" />
-        </div>
-      </div>
 
       <details className="card expand" style={{ marginTop: 16 }}>
         <summary>Ad Performance</summary>

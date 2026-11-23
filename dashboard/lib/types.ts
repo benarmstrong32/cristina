@@ -23,8 +23,15 @@ export type Snapshot = {
   kpis: KpiRow[];
   highlights: { key: string; value: string; detail: string }[];
   daily: { date: string; spend: number; applications: number }[];
-  people: { person: string; name: string; first_date: string; funnel_a: string; funnel_b: string; call: string; sales: string; from_ads: string }[];
+  people: Person[];
   calls: { id: string; name: string; booked_date: string; call_at: string; start_label: string; outcome: string }[];
   adTable: { ad_id: string; ad_name: string; adset_name: string; status: string; spend: number; impressions: number; ctr: number | null; cpc: number | null; meta_leads: number; ghl_submissions: number; qualified: number }[];
   health: { check: string; ok: string; detail: string }[];
+};
+
+export type Person = {
+  person: string; name: string; first_date: string;
+  email: string; phone: string; company: string; role: string; team_size: string; challenge: string;
+  budget: string; timeline: string; decision_maker: string; training: string; notes: string;
+  funnel_a: string; funnel_b: string; call: string; sales: string; from_ads: string;
 };

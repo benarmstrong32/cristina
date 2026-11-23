@@ -26,7 +26,7 @@ dash.loader('ghl_contacts', { description: 'Pages through GoHighLevel contacts (
   }
   const rows = all.map((c) => {
     const a = c.attributionSource || {};
-    return { contact_id: c.id, first_name: c.firstName || c.firstNameLowerCase || '', last_name: c.lastName || c.lastNameLowerCase || '', email: c.email || '', source: (c.source || '').trim(), date_added: c.dateAdded, utm_source: a.utmSource || '', session_source: a.sessionSource || '', utm_content: a.utmContent || '', has_fbclid: !!(a.fbclid || a.fbc) };
+    return { contact_id: c.id, first_name: c.firstName || c.firstNameLowerCase || '', last_name: c.lastName || c.lastNameLowerCase || '', email: c.email || '', phone: c.phone || '', source: (c.source || '').trim(), date_added: c.dateAdded, utm_source: a.utmSource || '', session_source: a.sessionSource || '', utm_content: a.utmContent || '', has_fbclid: !!(a.fbclid || a.fbc) };
   });
   return { rows, cut: p >= 10 && (page.contacts || []).length === 100 };
 }});
@@ -41,7 +41,7 @@ dash.loader('ghl_surveys', { description: 'Pages through application (survey) su
   }
   return { rows: all.map((s) => {
     const o = s.others || {}; const e = o.eventData || {}; const u = e.url_params || {};
-    return { submission_id: s.id, survey_id: s.surveyId, contact_id: s.contactId, name: (s.name || `${o.first_name || ''} ${o.last_name || ''}`).trim(), email: s.email || o.email || '', created_at: s.createdAt, disqualified: o.disqualified === true, team_size: o.aB3NR4fzbIOBE2KLGDlJ || '', role: o['1InzOjJIrH8jsWRoyQYG'] || '', utm_source: u.utm_source || '', utm_content: u.utm_content || '', has_fbclid: !!(u.fbclid || e.fbc), referrer: e.referrer || '' };
+    return { submission_id: s.id, survey_id: s.surveyId, contact_id: s.contactId, name: (s.name || `${o.first_name || ''} ${o.last_name || ''}`).trim(), email: s.email || o.email || '', created_at: s.createdAt, disqualified: o.disqualified === true, phone: o.phone || '', company: o.MhxkfPO9Vgydescwb2O5 || o.organization || '', team_size: o.aB3NR4fzbIOBE2KLGDlJ || '', role: o['1InzOjJIrH8jsWRoyQYG'] || '', challenge: o.pRMTI6DcIWuDpS80uLSY || '', budget: o.Co9PxagdBxyfddvqAvfe || '', timeline: o.IFD6120Te2UQh6cE9OJT || '', decision_maker: o.OlgNWxAqqo1PGpJ0jErd || '', training: o.yjADYukQUHEnZ3gB8Ghh || '', notes: o.YBpyedxu19IULlIoV4lb || '', utm_source: u.utm_source || '', utm_content: u.utm_content || '', has_fbclid: !!(u.fbclid || e.fbc), referrer: e.referrer || '' };
   }), cut: !!(page.meta && page.meta.nextPage) };
 }});
 
@@ -109,14 +109,14 @@ dash.calc('actions', {
       if (isStaff(s.contact_id, s.email, s.name)) { staffIds.add(s.contact_id); continue; }
       if (!s.name && !s.email) continue;
       const p = key(s.name, s.email); personOf.set(s.contact_id, p); submittedIds.add(s.contact_id);
-      add(p, s.name, s.contact_id, 'Completed application', s.created_at, fromAds(s), { ad_id: s.utm_content });
+      add(p, s.name, s.contact_id, 'Completed application', s.created_at, fromAds(s), { ad_id: s.utm_content, form: { email: s.email, phone: s.phone, company: s.company, role: s.role, team_size: s.team_size, challenge: s.challenge, budget: s.budget, timeline: s.timeline, decision_maker: s.decision_maker, training: s.training, notes: s.notes } });
       add(p, s.name, s.contact_id, s.disqualified ? 'Disqualified' : 'Qualified', s.created_at, fromAds(s), { ad_id: s.utm_content, detail: [s.team_size, s.role].filter(Boolean).join(' · ') });
     }
     for (const f of funnelB) {
       if (isStaff(f.contact_id, f.email, f.name)) { staffIds.add(f.contact_id); continue; }
       if (!f.name && !f.email) continue;
       const p = key(f.name, f.email); personOf.set(f.contact_id, p);
-      add(p, f.name, f.contact_id, 'Funnel B opt-in', f.created_at, fromAds(f), { ad_id: f.utm_content });
+      add(p, f.name, f.contact_id, 'Funnel B opt-in', f.created_at, fromAds(f), { ad_id: f.utm_content, form: { email: f.email } });
     }
     for (const c of contacts) {
       const name = `${c.first_name} ${c.last_name}`.trim();
@@ -125,7 +125,7 @@ dash.calc('actions', {
       const p = key(name, c.email);
       if (out.some((a) => a.person === p && a.action === 'Completed application')) continue;
       personOf.set(c.contact_id, p);
-      add(p, name, c.contact_id, 'Started application only', c.date_added, fromAds({ has_fbclid: c.has_fbclid, utm_source: c.utm_source, referrer: '' }), { ad_id: c.utm_content });
+      add(p, name, c.contact_id, 'Started application only', c.date_added, fromAds({ has_fbclid: c.has_fbclid, utm_source: c.utm_source, referrer: '' }), { ad_id: c.utm_content, form: { email: c.email, phone: c.phone } });
     }
     const who = (id, name, email) => {
       if (personOf.has(id)) return personOf.get(id);
@@ -173,7 +173,10 @@ dash.calc('people', {
       const funnelA = has(list, 'Qualified') ? 'Completed · qualified' : has(list, 'Disqualified') ? 'Completed · not qualified' : has(list, 'Started application only') ? 'Started, did not finish' : '—';
       const call = has(list, 'Attended call') ? 'Attended' : has(list, 'No-show') ? 'No-show' : has(list, 'Call outcome not marked') ? 'Booked · outcome not marked' : has(list, 'Booked call') ? 'Booked · upcoming' : has(list, 'Cancelled call') ? 'Cancelled' : '—';
       const sales = has(list, 'Customer') ? 'Customer' : has(list, 'Lost') ? 'Lost' : has(list, 'Confirmed qualified') ? 'Confirmed qualified' : '—';
-      return { person, name: list[0].name, first_date: first, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
+      const FIELDS = ['email', 'phone', 'company', 'role', 'team_size', 'challenge', 'budget', 'timeline', 'decision_maker', 'training', 'notes'];
+      const forms = list.filter((a) => a.form).sort((a, b) => (a.action === 'Completed application' ? 0 : 1) - (b.action === 'Completed application' ? 0 : 1) || b.at.localeCompare(a.at));
+      const answers = Object.fromEntries(FIELDS.map((f) => [f, (forms.find((a) => a.form[f]) || { form: {} }).form[f] || '']));
+      return { person, name: list[0].name, first_date: first, ...answers, funnel_a: funnelA, funnel_b: has(list, 'Funnel B opt-in') ? 'Opted in' : '—', call, sales, from_ads: list.some((a) => a.from_ads === 'Yes') ? 'Facebook/Instagram' : 'Not tracked' };
     }).sort((a, b) => b.first_date.localeCompare(a.first_date));
   },
 });
