@@ -53,11 +53,7 @@ async function rowsFrom(id: string, answers: any[]) {
   return out;
 }
 
-export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string): Promise<Snapshot> {
-  const loc = c.ghlLocationId;
-  const until = "2030-12-31";
-
-  // Meta, reshaped to the field names the shared loaders read.
+async function liveMeta(c: ClientConfig, meta: string) {
   const [dayRows, adRows, adStatus, setRows, setInfo] = await Promise.all([
     graph(`act_${c.metaAdAccountId}/insights?level=account&time_increment=1&date_preset=maximum&fields=spend,impressions,inline_link_clicks,actions`, meta),
     graph(`act_${c.metaAdAccountId}/insights?level=ad&date_preset=maximum&fields=ad_id,ad_name,adset_name,spend,impressions,inline_link_clicks,actions`, meta),
@@ -70,6 +66,34 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
   const metaAdsets = { ad_entities: setInfo.map((s) => { const r = setStats.get(s.id) || {}; return { id: s.id, name: s.name, effective_status: s.effective_status, start_time: s.start_time, daily_budget: s.daily_budget ? Number(s.daily_budget) / 100 : 0, amount_spent: r.spend, impressions: r.impressions, link_click: r.inline_link_clicks, lead: act(r.actions, "lead") }; }) };
   const metaDaily = { ad_entities: dayRows.map((r) => ({ date_start: r.date_start, amount_spent: r.spend, impressions: r.impressions, link_click: r.inline_link_clicks, landing_page_view: act(r.actions, "landing_page_view"), lead: act(r.actions, "lead") })) };
   const metaAds = { ad_entities: adRows.map((r) => ({ id: r.ad_id, name: r.ad_name, adset_name: r.adset_name, effective_status: status.get(r.ad_id) ?? "UNKNOWN", amount_spent: r.spend, impressions: r.impressions, link_click: r.inline_link_clicks, lead: act(r.actions, "lead") })) };
+  return {
+    meta_daily: await rowsFrom("meta_daily", [metaDaily]),
+    meta_ads: await rowsFrom("meta_ads", [metaAds]),
+    meta_adsets: await rowsFrom("meta_adsets", [metaAdsets]),
+  };
+}
+
+/** Saved Meta rows (data/snapshot/meta-saved.json), refreshed through Claude's Meta connector. */
+async function savedMeta(): Promise<{ savedAt: string; meta_daily: any[]; meta_ads: any[]; meta_adsets: any[] }> {
+  const { readFile } = await import("node:fs/promises");
+  const path = await import("node:path");
+  return JSON.parse(await readFile(path.join(process.cwd(), "data", "snapshot", "meta-saved.json"), "utf8"));
+}
+
+/** Live GoHighLevel always; live Meta when a Meta token is set, otherwise the saved Meta copy. */
+export async function fetchLive(c: ClientConfig, meta: string | undefined, ghlToken: string): Promise<Snapshot> {
+  const loc = c.ghlLocationId;
+  const until = "2030-12-31";
+
+  let metaSavedAt: string | undefined;
+  let metaRows: { meta_daily: any[]; meta_ads: any[]; meta_adsets: any[] };
+  if (meta) {
+    metaRows = await liveMeta(c, meta);
+  } else {
+    const saved = await savedMeta();
+    metaSavedAt = saved.savedAt;
+    metaRows = { meta_daily: saved.meta_daily, meta_ads: saved.meta_ads, meta_adsets: saved.meta_adsets };
+  }
 
   // GoHighLevel.
   const start = new Date(`${SINCE}T00:00:00Z`).getTime();
@@ -83,14 +107,17 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
     ghl(`/calendars/events?locationId=${loc}&calendarId=${c.introCalendarId}&startTime=${start}&endTime=${Date.UTC(2030, 11, 31)}`, ghlToken, "2021-04-15"),
     pages((page) => ghl(`/opportunities/search?location_id=${loc}&pipeline_id=${c.pipelineId}&limit=100&page=${page}`, ghlToken, "2021-07-28"), (a) => (a.opportunities ?? []).length === 100),
     ghl(`/opportunities/pipelines?locationId=${loc}`, ghlToken, "2021-07-28"),
-    ghl(`/payments/orders?altId=${loc}&altType=location&startAt=${SINCE}&limit=100`, ghlToken, "2021-07-28"),
+    // Orders only feed the course-purchase count; don't let a missing payments scope break the page.
+    ghl(`/payments/orders?altId=${loc}&altType=location&startAt=${SINCE}&limit=100`, ghlToken, "2021-07-28").catch((e) => {
+      console.error(e);
+      return { data: [] };
+    }),
   ]);
   // One page at a time through the loaders, with "next page" hints removed.
   const strip = (a: any) => ({ ...a, meta: {} });
 
   const rows = {
-    meta_daily: await rowsFrom("meta_daily", [metaDaily]),
-    meta_ads: await rowsFrom("meta_ads", [metaAds]),
+    ...metaRows,
     ghl_contacts: await rowsFrom("ghl_contacts", contacts),
     ghl_surveys: await rowsFrom("ghl_surveys", surveys.map(strip)),
     ghl_funnel_b: await rowsFrom("ghl_funnel_b", funnelB.map(strip)),
@@ -98,7 +125,6 @@ export async function fetchLive(c: ClientConfig, meta: string, ghlToken: string)
     ghl_opps: await rowsFrom("ghl_opps", opps),
     ghl_stages: await rowsFrom("ghl_stages", [pipelines]),
     ghl_orders: await rowsFrom("ghl_orders", [orders]),
-    meta_adsets: await rowsFrom("meta_adsets", [metaAdsets]),
   };
-  return computeSnapshot(c.id, rows, { source: "live" });
+  return computeSnapshot(c.id, rows, { source: "live", metaLive: !!meta, ...(metaSavedAt ? { metaSavedAt } : {}) });
 }

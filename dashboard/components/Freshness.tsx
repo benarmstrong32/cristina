@@ -9,7 +9,7 @@ export function Freshness({ snap, clientId, back, error, team }: { snap: Snapsho
     <div className="freshness">
       <span>
         {live ? (
-          <>Live data · updated {dateTime(snap.generatedAt)} ET · refreshes every {REFRESH_HOURS} hours</>
+          <>Live data · updated {dateTime(snap.generatedAt)} ET · refreshes every {REFRESH_HOURS} hours{snap.metaLive === false ? <> · ad spend and clicks through {shortDate(snap.dataThrough)}</> : null}</>
         ) : (
           <>Ad results through {shortDate(snap.dataThrough)}{snap.crmThrough ? <> · applications and calls through {shortDate(snap.crmThrough)}</> : null}</>
         )}

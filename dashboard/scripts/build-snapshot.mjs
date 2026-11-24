@@ -24,6 +24,8 @@ for (const id of DATASETS) {
 }
 const snapshot = await computeSnapshot(clientId, rows, { source: "saved", ...(crmThrough ? { crmThrough } : {}) });
 await mkdir(path.join(root, "data", "snapshot"), { recursive: true });
+// Saved Meta rows, used by the live portal until it has its own Meta token.
+await writeFile(path.join(root, "data", "snapshot", "meta-saved.json"), JSON.stringify({ savedAt: new Date().toISOString(), meta_daily: rows.meta_daily, meta_ads: rows.meta_ads, meta_adsets: rows.meta_adsets }));
 const out = path.join(root, "data", "snapshot", `${clientId}.json`);
 await writeFile(out, JSON.stringify(snapshot, null, 1));
 const k30 = snapshot.kpis.find((k) => k.range === "30d");

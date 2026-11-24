@@ -17,18 +17,18 @@ async function saved(clientId: string): Promise<Snapshot | null> {
 }
 
 export function hasLiveTokens(c: ClientConfig) {
-  return !!(process.env[c.metaTokenEnv] && process.env[c.ghlTokenEnv]);
+  return !!process.env[c.ghlTokenEnv];
 }
 
 /**
- * Live data when both tokens are set (cached for REFRESH_HOURS, cleared by the
+ * Live data when the GoHighLevel token is set (Meta live too if its token is set) (cached for REFRESH_HOURS, cleared by the
  * Refresh button); otherwise, or if the live pull fails, the saved copy.
  */
 export async function getSnapshot(c: ClientConfig): Promise<{ snap: Snapshot | null; error?: string }> {
   if (hasLiveTokens(c)) {
     try {
       const cached = unstable_cache(
-        () => fetchLive(c, process.env[c.metaTokenEnv]!, process.env[c.ghlTokenEnv]!),
+        () => fetchLive(c, process.env[c.metaTokenEnv] || undefined, process.env[c.ghlTokenEnv]!),
         ["live-snapshot", c.id],
         { revalidate: REFRESH_HOURS * 3600, tags: [liveTag(c.id)] },
       );

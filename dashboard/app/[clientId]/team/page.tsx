@@ -2,18 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClient } from "@/config/clients";
 import { requireAccess } from "@/lib/auth";
-import { getSnapshot } from "@/lib/data";
+import { getCreatives, getSnapshot } from "@/lib/data";
 import { kpiFor, parseRange } from "@/lib/metrics";
 import { dateTime, num, pct, shortDate, usd } from "@/lib/format";
 import { Controls, Kpi, TopBar } from "@/components/ui";
 import { Freshness } from "@/components/Freshness";
 import { PeopleTable } from "@/components/PeopleTable";
 import { AdsTable } from "@/components/AdsTable";
+import { AdsByLead } from "@/components/AdsByLead";
+import { AdSetsTable, TeamPerformance } from "@/components/TeamPerformance";
 
 export const dynamic = "force-dynamic";
 
 const TABS = [
+  { key: "performance", label: "Performance" },
+  { key: "adsets", label: "Ad sets" },
   { key: "people", label: "People" },
+  { key: "sources", label: "Lead sources" },
   { key: "calls", label: "Intro calls" },
   { key: "ads", label: "Ads" },
   { key: "health", label: "Data health" },
@@ -32,9 +37,10 @@ export default async function TeamView({
   const session = await requireAccess(clientId, { teamOnly: true });
   const sp = await searchParams;
   const range = parseRange(sp.range);
-  const tab: Tab = (TABS.find((t) => t.key === sp.tab)?.key ?? "people") as Tab;
+  const tab: Tab = (TABS.find((t) => t.key === sp.tab)?.key ?? "performance") as Tab;
   const { snap, error } = await getSnapshot(client);
   const k = snap ? kpiFor(snap, range) : undefined;
+  const creatives = tab === "sources" ? await getCreatives() : {};
   const base = `/${clientId}/team`;
 
   return (
@@ -51,7 +57,23 @@ export default async function TeamView({
         <>
           <Freshness snap={snap} clientId={clientId} back={`${base}?${new URLSearchParams({ range, tab })}`} error={error} team />
 
+          {tab === "performance" && <TeamPerformance k={k} snap={snap} />}
+
+          {tab === "adsets" && (
+            <>
+              <p className="period">Each ad set since it started (not affected by the range picker). “Learning” means under 14 days old.</p>
+              <AdSetsTable snap={snap} />
+            </>
+          )}
+
           {tab === "people" && <PeopleTable people={snap.people} showTracking />}
+
+          {tab === "sources" && (
+            <>
+              <p className="period">The ad each lead clicked, from GoHighLevel’s tracking. {snap.people.filter((p) => !p.ad_id).length} people have no ad recorded (organic, direct, or tracking lost); they’re listed under People.</p>
+              <AdsByLead people={snap.people} creatives={creatives} metaAccountId={client.metaAdAccountId} ghlLocationId={client.ghlLocationId} />
+            </>
+          )}
 
           {tab === "calls" && (
             <>
@@ -81,7 +103,7 @@ export default async function TeamView({
 
           {tab === "ads" && (
             <>
-              <p className="period">Each ad’s results since the campaign started (not affected by the range picker).</p>
+              <p className="period">Every ad, active and off, since the campaign started (not affected by the range picker).</p>
               <AdsTable ads={snap.adTable} />
             </>
           )}

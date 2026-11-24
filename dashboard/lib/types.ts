@@ -20,6 +20,8 @@ export type Snapshot = {
   dataThrough: string;
   source?: "live" | "saved";
   crmThrough?: string;
+  metaLive?: boolean;
+  metaSavedAt?: string;
   kpis: KpiRow[];
   highlights: { key: string; value: string; detail: string }[];
   daily: { date: string; spend: number; applications: number }[];
