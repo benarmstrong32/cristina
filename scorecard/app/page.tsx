@@ -63,7 +63,7 @@ function Overview({ d, period }: { d: Data; period: Period }) {
     <>
       <div className="grid kpis four">
         <Kpi tone="spend" label="Ad spend" value={usd(o.ads.spend)} hint="Spent on Meta ads" />
-        <Kpi tone="lead" label="Applications" value={num(o.ads.applications)} hint={`Website applications Meta counted · ${usd(o.ads.cpa)} each`} />
+        <Kpi tone="lead" label="Applications & leads" value={num(o.ads.applications)} hint={`Applications and lead forms Meta counted · ${usd(o.ads.cpa)} each`} />
         <Kpi tone="partial" label="Triage calls" value={num(o.triage.completed)} hint={`Completed by Cristina · ${num(o.triage.bookedIntro)} booked an intro`} />
         <Kpi tone="booked" label="Intros completed" value={num(o.allIntros.completed)} hint={`${num(o.allIntros.booked)} booked · ${pct(o.allIntros.showRate, 0)} show rate · all sources`} />
         <Kpi tone="qualified" label="Deals won" value={num(o.allWins)} hint={`${o.metaWins} from Meta · ${usd(o.allRevenue)} contract value`} />

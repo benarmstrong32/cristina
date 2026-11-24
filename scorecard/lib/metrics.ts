@@ -29,7 +29,8 @@ export const addDays = (day: string, n: number) => {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 };
-const isApp = (r: AdRow) => r.result_type.includes("submit_application");
+/** Applications (website) and leads (Meta lead forms, used by the MFM / Home Services ads). */
+const isApp = (r: AdRow) => r.result_type.includes("submit_application") || r.result_type.includes("lead");
 export const yes = (v: string) => String(v).trim().toLowerCase() === "yes";
 const no = (v: string) => String(v).trim().toLowerCase() === "no";
 

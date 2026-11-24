@@ -63,7 +63,7 @@ export async function getData(): Promise<Data> {
     intros: sheet.intros as Intro[],
     wins: sheet.wins as Win[],
     triage: (sheet.triage ?? []) as Triage[],
-    adTotals: adFile.ads as AdTotal[],
+    adTotals: (adFile.ads as (AdTotal & { leads?: number })[]).map((a) => ({ ...a, applications: (a.applications || 0) + (a.leads || 0) })),
     adTotalsThrough: adFile.through as string,
     sheetSavedAt: sheet.savedAt as string,
   };
