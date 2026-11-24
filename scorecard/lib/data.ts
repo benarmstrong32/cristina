@@ -56,10 +56,13 @@ export async function getData(): Promise<Data> {
   const adFile = await readJson("meta-ads.json").catch(() => ({ ads: [], through: "" }));
   const people = await readJson("applicants.json").catch(() => ({ people: [], savedAt: undefined }));
   const creatives = (await readJson("ad-creatives.json").catch(() => ({}))) as Record<string, Creative>;
+  const winFile = await readJson("meta-ad-windows.json").catch(() => ({}));
+  const adWindows = Object.fromEntries(["7d", "30d"].filter((k) => winFile[k]).map((k) => [k, { ...winFile[k], through: winFile.through }]));
   const adDaily = ((await readJson("meta-ad-daily.json").catch(() => ({ rows: [] }))).rows ?? []) as AdDay[];
   const base = {
     creatives,
     adDaily,
+    adWindows,
     applicants: people.people as Applicant[],
     applicantsSavedAt: people.savedAt as string | undefined,
     intros: sheet.intros as Intro[],

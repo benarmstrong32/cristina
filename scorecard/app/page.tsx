@@ -100,7 +100,7 @@ function Overview({ d, period }: { d: Data; period: Period }) {
         </div>
       </div>
 
-      <h2 className="section">Highlights <span className="sub">best results, {shortDate(h.since)} – {shortDate(h.until)}</span></h2>
+      <h2 className="section">Highlights <span className="sub">best results, {shortDate(h.since)} – {shortDate(h.until)}{h.allTime ? " · the three ad highlights show all time for custom ranges until daily ad data finishes loading" : ""}</span></h2>
       <div className="grid hl-grid">
         <div className="card hl"><div className="label">Top ad for applications</div><div className="big">{h.topAd?.name ?? "—"}</div><p>{h.topAd ? `${h.topAd.applications} applications and leads, ${pct(h.topAd.share, 0)} of all Meta results in this period.` : "No applications in this period."}</p></div>
         <div className="card hl"><div className="label">Lowest cost per application</div><div className="big">{usd(h.cheapest?.cpa ?? null)}</div><p>{h.cheapest ? `From “${h.cheapest.name}”, against ${usd(h.cheapest.overall)} across all ads.` : "Not enough applications in this period."}</p></div>

@@ -165,7 +165,11 @@ export function highlights(d: Data, p: Period) {
   const names = new Map(d.adTotals.map((a) => [a.id, a.name]));
   // Per-ad totals for the window from daily ad rows (falls back to whole-period totals if those aren't saved).
   let ads: { id: string; name: string; spend: number; impressions: number; clicks: number; applications: number }[];
-  if (d.adDaily.length) {
+  let allTime = false;
+  const preset = (p.range === "7d" || p.range === "30d") ? d.adWindows[p.range] : undefined;
+  if (preset && preset.through === w.until && preset.since === w.since) {
+    ads = preset.ads.map((a) => ({ ...a, name: names.get(a.id) ?? `Ad ${a.id}` }));
+  } else if (d.adDaily.length && d.adDaily.some((r) => r.day <= w.since) && d.adDaily.some((r) => r.day >= w.until)) {
     const by = new Map<string, { id: string; name: string; spend: number; impressions: number; clicks: number; applications: number }>();
     for (const r of d.adDaily) {
       if (r.day < w.since || r.day > w.until) continue;
@@ -176,6 +180,7 @@ export function highlights(d: Data, p: Period) {
     ads = [...by.values()];
   } else {
     ads = d.adTotals.map((a) => ({ ...a }));
+    allTime = w.since > START;
   }
   ads = ads.filter((a) => a.spend > 0);
   const totalApps = sum(ads, (a) => a.applications);
@@ -207,6 +212,7 @@ export function highlights(d: Data, p: Period) {
   return {
     since: w.since,
     until: w.until,
+    allTime,
     topAd: topAd ? { name: topAd.name, applications: topAd.applications, share: div(topAd.applications, totalApps) } : null,
     cheapest: cheapest ? { name: cheapest.name, cpa: cheapest.cpa, overall: div(totalSpend, totalApps) } : null,
     ctr: ctr ? { name: ctr.name, ctr: ctr.ctr, cpc: div(ctr.spend, ctr.clicks) } : null,

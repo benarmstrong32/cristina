@@ -89,6 +89,7 @@ export type Data = {
   triage: Triage[];
   adTotals: AdTotal[];
   adDaily: AdDay[];
+  adWindows: Record<string, { since: string; through: string; ads: { id: string; spend: number; impressions: number; clicks: number; applications: number }[] }>;
   adTotalsThrough: string;
   creatives: Record<string, Creative>;
   applicants: Applicant[];
