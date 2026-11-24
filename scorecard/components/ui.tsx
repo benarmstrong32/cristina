@@ -27,6 +27,7 @@ export function TopBar({ session }: { session: Session }) {
 
 export const TABS = [
   { key: "overview", label: "Overview" },
+  { key: "pipeline", label: "Pipeline" },
   { key: "funnel", label: "Funnel" },
   { key: "people", label: "People" },
   { key: "which-ad", label: "Which ad" },
@@ -90,7 +91,7 @@ export function Freshness({ d, back }: { d: Data; back: string }) {
       <span>
         {d.adsLive ? <>Meta live · updated {dateTime(d.generatedAt)} ET</> : <>Meta through {shortDate(d.adsThrough)}</>}
         {" "}· people from GoHighLevel {d.applicantsSavedAt ? `as of ${shortDate(d.applicantsSavedAt)}` : ""}
-        {" "}· intros, triage and deals from the sales sheet as of {shortDate(d.sheetSavedAt)}
+        {" "}· intros, triage calls and pipeline are edited live in the app
         {d.error ? <span className="fresh-err"> · Live update failed: {d.error}</span> : null}
       </span>
       <form method="post" action="/api/refresh">

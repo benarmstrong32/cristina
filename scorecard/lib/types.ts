@@ -10,6 +10,8 @@ export type AdRow = {
 };
 
 export type Intro = {
+  id?: string;
+  notes?: string;
   month: string;
   company: string;
   completed: string;
@@ -33,6 +35,7 @@ export type Win = {
 };
 
 export type Triage = {
+  id?: string;
   month: string;
   company: string;
   date: string;
@@ -80,6 +83,8 @@ export type AdDay = { day: string; id: string; spend: number; impressions: numbe
 export type Creative = { format?: string; image?: string; headline?: string; body?: string; about?: string; adset?: string };
 
 export type Data = {
+  versions: { intros: number; triage: number };
+  liveUpdated: { intros: string; triage: string };
   ads: AdRow[];
   adsThrough: string;
   adsLive: boolean;
@@ -97,4 +102,23 @@ export type Data = {
   sheetSavedAt: string;
   generatedAt: string;
   error?: string;
+};
+
+export type Deal = {
+  id: string;
+  owner: string;
+  closeMonth: string;
+  company: string;
+  leadSource: string;
+  status: string;
+  dealType: string;
+  contact: string;
+  email: string;
+  lastAction: string;
+  nextAction: string;
+  lastSummary: string;
+  nextSteps: string;
+  amountPerMonth: number | null;
+  confidence: number | null;
+  months: number | null;
 };

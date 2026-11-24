@@ -1,21 +1,24 @@
 import { Fragment } from "react";
 import { requireSession } from "@/lib/auth";
+import { readCollection } from "@/lib/store";
+import { RecordForm, SaveNotice } from "@/components/Records";
+import { Pipeline } from "@/components/Pipeline";
 import { getData } from "@/lib/data";
 import {
   bonus, byChannel, campaigns, daily, funnel, goals, highlights, monthLabel, months, overview, parsePeriod,
   triageByMonth, triageStats, yes, type Period,
 } from "@/lib/metrics";
-import { num, pct, ratio, shortDate, usd } from "@/lib/format";
+import { dateTime, num, pct, ratio, shortDate, usd } from "@/lib/format";
 import { Controls, Freshness, Funnel, Kpi, TABS, TopBar, type TabKey } from "@/components/ui";
 import { BarChart } from "@/components/BarChart";
 import { MonthBars } from "@/components/MonthBars";
 import { AdPreview } from "@/components/AdPreview";
 import { BONUS_GOAL, BONUS_PER_DEAL, SHEET_START } from "@/config/scorecard";
-import type { Applicant, Data } from "@/lib/types";
+import type { Applicant, Data, Deal } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-type SP = { range?: string; from?: string; to?: string; view?: string };
+type SP = { range?: string; from?: string; to?: string; view?: string; saved?: string; error?: string };
 
 export default async function Home({ searchParams }: { searchParams: Promise<SP> }) {
   const session = await requireSession();
@@ -23,6 +26,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   const period = parsePeriod(sp);
   const view: TabKey = (TABS.find((t) => t.key === sp.view)?.key ?? "overview") as TabKey;
   const d = await getData();
+  const deals = view === "pipeline" ? await readCollection<Deal>("deals") : null;
   const o = overview(d, period);
   const back = `/?${new URLSearchParams({ view, ...(sp.range ? { range: sp.range } : {}), ...(sp.from ? { from: sp.from } : {}), ...(sp.to ? { to: sp.to } : {}) })}`;
 
@@ -30,6 +34,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
     <main className="shell">
       <TopBar session={session} />
       <Controls period={period} view={view} />
+      <SaveNotice saved={sp.saved} error={sp.error} />
       <Freshness d={d} back={back} />
       <p className="period">
         {shortDate(o.since)} – {shortDate(o.until)} · Meta and triage calls use these exact dates · intros and deals use{" "}
@@ -42,9 +47,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       {view === "which-ad" && <WhichAd d={d} period={period} />}
       {view === "ads" && <Ads d={d} period={period} />}
       {view === "intros" && <Intros d={d} />}
-      {view === "triage" && <TriageTab d={d} period={period} />}
+      {view === "triage" && <TriageTab d={d} period={period} back={back} />}
       {view === "deals" && <Deals d={d} />}
-      {view === "log" && <Log d={d} />}
+      {view === "log" && <Log d={d} back={back} />}
+      {view === "pipeline" && <Pipeline deals={deals} back={back} />}
       {view === "how" && <How />}
     </main>
   );
@@ -386,7 +392,7 @@ function Intros({ d }: { d: Data }) {
   );
 }
 
-function TriageTab({ d, period }: { d: Data; period: Period }) {
+function TriageTab({ d, period, back }: { d: Data; period: Period; back: string }) {
   const o = overview(d, period);
   const rows = d.triage.filter((t) => t.date >= o.since && t.date <= o.until).sort((a, b) => (a.date < b.date ? 1 : -1));
   const st = triageStats(rows);
@@ -408,24 +414,28 @@ function TriageTab({ d, period }: { d: Data; period: Period }) {
           ))}</tbody>
         </table>
       </div>
-      <h2 className="section">Every triage call <span className="sub">{shortDate(o.since)} – {shortDate(o.until)}, newest first</span></h2>
-      <div className="card table-wrap">
-        <table className="people">
-          <thead><tr><th>Date</th><th>Company / prospect</th><th>Source</th><th>Completed</th><th>Booked intro</th><th>Notes</th></tr></thead>
-          <tbody>
-            {rows.map((t, i) => (
-              <tr key={t.date + t.company + i}>
-                <td>{shortDate(t.date)}</td><td>{t.company}</td><td>{t.lead_source}</td>
-                <td><span className={`pill ${yes(t.completed) ? "good" : "bad"}`}>{t.completed || "—"}</span></td>
-                <td><span className={`pill ${yes(t.booked_intro) ? "good" : ""}`}>{t.booked_intro || "—"}</span></td>
-                <td className="wrap">{t.notes}</td>
-              </tr>
-            ))}
-            {!rows.length ? <tr><td colSpan={6}>No triage calls in this period.</td></tr> : null}
-          </tbody>
-        </table>
+      <h2 className="section">Every triage call <span className="sub">{shortDate(o.since)} – {shortDate(o.until)}, newest first · click a call to edit it</span></h2>
+      <details className="card expand add-card">
+        <summary>＋ Add a triage call</summary>
+        <RecordForm kind="triage" version={d.versions.triage} back={back} label="Add triage call" />
+      </details>
+      <div className="people-list">
+        {rows.map((t) => (
+          <details className="card person" key={t.id ?? t.date + t.company}>
+            <summary className="rec-row">
+              <span className="pdate">{shortDate(t.date)}</span>
+              <span className="pname">{t.company}</span>
+              <span className="pco">{t.lead_source}</span>
+              <span><span className={`pill ${yes(t.completed) ? "good" : t.completed.toLowerCase() === "no" ? "bad" : "warn"}`}>{t.completed || "—"}</span></span>
+              <span>{yes(t.booked_intro) ? <span className="pill good">Booked intro</span> : t.booked_intro ? <span className="pill">No intro</span> : null}</span>
+              <span className="pco wrapcell">{t.notes}</span>
+            </summary>
+            <RecordForm kind="triage" row={t as unknown as Record<string, unknown>} version={d.versions.triage} back={back} />
+          </details>
+        ))}
+        {!rows.length ? <div className="card">No triage calls in this period.</div> : null}
       </div>
-      <p className="note">From the Triage Calls tab of the sales ops sheet, updated {shortDate(d.sheetSavedAt)}.</p>
+      <p className="note">Saved in the app{d.liveUpdated.triage ? `, last change ${dateTime(d.liveUpdated.triage)} ET` : " (started from the sales ops sheet, Nov 19)"}. Changes show up everywhere right away.</p>
     </>
   );
 }
@@ -453,26 +463,32 @@ function Deals({ d }: { d: Data }) {
   );
 }
 
-function Log({ d }: { d: Data }) {
+function Log({ d, back }: { d: Data; back: string }) {
   const xs = [...d.intros].reverse().sort((a, b) => (a.month < b.month ? 1 : a.month > b.month ? -1 : 0));
   const tone = (c: string) => (c.toLowerCase() === "yes" ? "good" : c.toLowerCase() === "no" ? "bad" : "warn");
   return (
     <>
-      <h2 className="section">Intro log <span className="sub">every intro in the sales ops sheet, newest month first</span></h2>
-      <div className="card table-wrap">
-        <table className="people">
-          <thead><tr><th>Month</th><th>Company</th><th>Source</th><th>Channel</th><th>Completed</th><th>Won</th></tr></thead>
-          <tbody>
-            {xs.map((r, i) => (
-              <tr key={r.month + r.company + i}>
-                <td>{monthLabel(r.month)}</td><td>{r.company}</td><td>{r.lead_source}</td><td>{r.ad_channel}</td>
-                <td><span className={`pill ${tone(r.completed)}`}>{r.completed || "—"}</span></td>
-                <td>{yes(r.won) ? <span className="pill good">Won</span> : ""}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <h2 className="section">Intro log <span className="sub">every intro, newest month first · click an intro to edit it</span></h2>
+      <details className="card expand add-card">
+        <summary>＋ Add an intro</summary>
+        <RecordForm kind="intros" version={d.versions.intros} back={back} label="Add intro" />
+      </details>
+      <div className="people-list">
+        {xs.map((r) => (
+          <details className="card person" key={r.id ?? r.month + r.company}>
+            <summary className="rec-row">
+              <span className="pdate">{monthLabel(r.month)}</span>
+              <span className="pname">{r.company}</span>
+              <span className="pco">{r.lead_source}<span className="pfunnel">{r.ad_channel}</span></span>
+              <span><span className={`pill ${tone(r.completed)}`}>{r.completed || "—"}</span></span>
+              <span>{yes(r.won) ? <span className="pill good">Won {usd(r.contract_value)}</span> : null}</span>
+              <span className="pco wrapcell">{r.notes}</span>
+            </summary>
+            <RecordForm kind="intros" row={r as unknown as Record<string, unknown>} version={d.versions.intros} back={back} />
+          </details>
+        ))}
       </div>
+      <p className="note">Saved in the app{d.liveUpdated.intros ? `, last change ${dateTime(d.liveUpdated.intros)} ET` : " (started from the sales ops sheet, Nov 19)"}. Completed intros feed the goal and Cristina's bonus right away.</p>
     </>
   );
 }
