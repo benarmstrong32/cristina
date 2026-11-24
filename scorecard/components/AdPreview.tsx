@@ -14,10 +14,10 @@ export function AdPreview({ ad, c, children }: { ad: AdTotal | undefined; c: Cre
       <div className="ad-body">
         <div className="ad-title">{ad?.name ?? "Unknown ad"}</div>
         <div className="ad-meta">
-          {[c?.format, c?.adset, ad ? statusLabel(ad.status) : null].filter(Boolean).join(" · ")}
+          {ad && !ad.id ? "Ad name from GoHighLevel's tracking (no Meta ad ID recorded)" : [c?.format, c?.adset, ad ? statusLabel(ad.status) : null].filter(Boolean).join(" · ")}
         </div>
         {c?.about ? <p className="ad-about">{c.about}</p> : null}
-        {ad ? (
+        {ad && ad.id ? (
           <div className="ad-stats tnum">
             <span><b>{usd(ad.spend)}</b> spent</span>
             <span><b>{num(ad.applications)}</b> applications{ad.applications ? ` · ${usd(ad.spend / ad.applications)} each` : ""}</span>

@@ -261,7 +261,8 @@ function WhichAd({ d, period }: { d: Data; period: Period }) {
   const names = new Map(d.adTotals.map((a) => [a.id, a]));
   const groups = new Map<string, Applicant[]>();
   for (const a of ps) {
-    const k = a.attribution?.adId ?? "none";
+    const byName = a.attribution?.adName ? d.adTotals.find((x) => x.name.trim().toLowerCase() === a.attribution!.adName!.trim().toLowerCase())?.id : undefined;
+    const k = a.attribution?.adId ?? byName ?? (a.attribution?.adName ? `name:${a.attribution.adName}` : "none");
     groups.set(k, [...(groups.get(k) ?? []), a]);
   }
   const sorted = [...groups.entries()].filter(([k]) => k !== "none").sort((a, b) => b[1].length - a[1].length);
@@ -274,7 +275,7 @@ function WhichAd({ d, period }: { d: Data; period: Period }) {
         {sorted.map(([id, people]) => {
           const ad = names.get(id);
           return (
-            <AdPreview key={id} ad={ad} c={d.creatives[id]}>
+            <AdPreview key={id} ad={ad ?? (id.startsWith("name:") ? { id: "", name: id.slice(5), status: "", spend: 0, impressions: 0, clicks: 0, applications: 0 } : undefined)} c={d.creatives[id]}>
               <div className="ad-meta" style={{ marginTop: 6 }}><b>{people.length} {people.length === 1 ? "person" : "people"}</b> from GoHighLevel clicked this ad · {people.filter((x) => x.status === "submitted").length} applied · {people.filter((x) => x.superQualified).length} ★</div>
               <table className="ad-people"><tbody>
                 {people.map((p) => (

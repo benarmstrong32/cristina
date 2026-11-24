@@ -65,7 +65,7 @@ export type Applicant = {
   stage?: string;
   tags?: string[];
   source?: string;
-  attribution?: { utmSource?: string; campaignId?: string; adsetId?: string; adId?: string; pageUrl?: string };
+  attribution?: { utmSource?: string; campaignId?: string; adsetId?: string; adId?: string; adName?: string; pageUrl?: string };
   answers: { question: string; answer: string }[];
   calls?: { date: string; title: string; status: string }[];
   ghlUrl?: string;
