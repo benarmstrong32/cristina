@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { unstable_cache } from "next/cache";
 import { AD_ACCOUNT_ID, REFRESH_HOURS, START } from "@/config/scorecard";
-import type { AdRow, AdTotal, Applicant, Creative, Data, Intro, Triage, Win } from "./types";
+import type { AdDay, AdRow, AdTotal, Applicant, Creative, Data, Intro, Triage, Win } from "./types";
 
 export const LIVE_TAG = "meta-live";
 
@@ -56,8 +56,10 @@ export async function getData(): Promise<Data> {
   const adFile = await readJson("meta-ads.json").catch(() => ({ ads: [], through: "" }));
   const people = await readJson("applicants.json").catch(() => ({ people: [], savedAt: undefined }));
   const creatives = (await readJson("ad-creatives.json").catch(() => ({}))) as Record<string, Creative>;
+  const adDaily = ((await readJson("meta-ad-daily.json").catch(() => ({ rows: [] }))).rows ?? []) as AdDay[];
   const base = {
     creatives,
+    adDaily,
     applicants: people.people as Applicant[],
     applicantsSavedAt: people.savedAt as string | undefined,
     intros: sheet.intros as Intro[],

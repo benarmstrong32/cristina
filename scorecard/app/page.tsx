@@ -53,7 +53,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
 function Overview({ d, period }: { d: Data; period: Period }) {
   const o = overview(d, period);
   const g = goals(d);
-  const h = highlights(d);
+  const h = highlights(d, period);
   const ch = byChannel(d, period);
   const ms = months(d);
   const days = daily(d, o.since, o.until);
@@ -100,14 +100,14 @@ function Overview({ d, period }: { d: Data; period: Period }) {
         </div>
       </div>
 
-      <h2 className="section">Highlights <span className="sub">best results since the ads started in April</span></h2>
+      <h2 className="section">Highlights <span className="sub">best results, {shortDate(h.since)} – {shortDate(h.until)}</span></h2>
       <div className="grid hl-grid">
-        <div className="card hl"><div className="label">Top ad for applications</div><div className="big">{h.topAd?.name ?? "—"}</div><p>{h.topAd ? `${h.topAd.applications} applications, ${pct(h.topAd.share, 0)} of all Meta applications.` : ""}</p></div>
-        <div className="card hl"><div className="label">Lowest cost per application</div><div className="big">{usd(h.cheapest?.cpa ?? null)}</div><p>{h.cheapest ? `From “${h.cheapest.name}”, against ${usd(h.cheapest.overall)} across all ads.` : ""}</p></div>
-        <div className="card hl"><div className="label">Highest click-through rate</div><div className="big">{pct(h.ctr?.ctr ?? null)}</div><p>{h.ctr ? `“${h.ctr.name}” at ${usd(h.ctr.cpc, true)} per click.` : ""}</p></div>
-        <div className="card hl"><div className="label">Best week for applications</div><div className="big">{h.bestWeek ? `${h.bestWeek.applications} applications` : "—"}</div><p>{h.bestWeek ? `Week of ${shortDate(h.bestWeek.week)}.` : ""}</p></div>
-        <div className="card hl"><div className="label">Meta close rate</div><div className="big">{pct(h.closeRate.rate, 0)}</div><p>{h.closeRate.won} deals from {h.closeRate.completed} completed Meta intros.</p></div>
-        <div className="card hl"><div className="label">Triage to intro</div><div className="big">{pct(h.triage.introRate, 0)}</div><p>{h.triage.bookedIntro} of {h.triage.completed} completed triage calls booked an intro.</p></div>
+        <div className="card hl"><div className="label">Top ad for applications</div><div className="big">{h.topAd?.name ?? "—"}</div><p>{h.topAd ? `${h.topAd.applications} applications and leads, ${pct(h.topAd.share, 0)} of all Meta results in this period.` : "No applications in this period."}</p></div>
+        <div className="card hl"><div className="label">Lowest cost per application</div><div className="big">{usd(h.cheapest?.cpa ?? null)}</div><p>{h.cheapest ? `From “${h.cheapest.name}”, against ${usd(h.cheapest.overall)} across all ads.` : "Not enough applications in this period."}</p></div>
+        <div className="card hl"><div className="label">Highest click-through rate</div><div className="big">{pct(h.ctr?.ctr ?? null)}</div><p>{h.ctr ? `“${h.ctr.name}” at ${usd(h.ctr.cpc, true)} per click.` : "Not enough impressions in this period."}</p></div>
+        <div className="card hl"><div className="label">{h.best?.isDay ? "Best day for applications" : "Best week for applications"}</div><div className="big">{h.best ? `${h.best.applications} application${h.best.applications === 1 ? "" : "s"}` : "—"}</div><p>{h.best ? (h.best.isDay ? `${shortDate(h.best.key)}.` : `Week of ${shortDate(h.best.key)}.`) : "No applications in this period."}</p></div>
+        <div className="card hl"><div className="label">Meta close rate</div><div className="big">{pct(h.closeRate.rate, 0)}</div><p>{h.closeRate.months.length ? `${h.closeRate.won} deal${h.closeRate.won === 1 ? "" : "s"} from ${h.closeRate.completed} completed Meta intros (${h.closeRate.months.map(monthLabel).join(", ")}).` : "The intro log starts in Sept 2026."}</p></div>
+        <div className="card hl"><div className="label">Triage to intro</div><div className="big">{pct(h.triage.introRate, 0)}</div><p>{h.triage.completed ? `${h.triage.bookedIntro} of ${h.triage.completed} completed triage calls booked an intro.` : "No completed triage calls in this period."}</p></div>
       </div>
 
       <h2 className="section">Daily <span className="sub">{shortDate(o.since)} – {shortDate(o.until)}</span></h2>

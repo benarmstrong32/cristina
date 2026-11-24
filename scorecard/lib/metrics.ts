@@ -159,32 +159,59 @@ export function goals(d: Data) {
   };
 }
 
-/** Best results since the ads started, in the spirit of the New Velocity highlights. */
-export function highlights(d: Data) {
-  const ads = d.adTotals.filter((a) => a.spend > 0);
-  const topAd = [...ads].sort((a, b) => b.applications - a.applications || a.spend - b.spend)[0];
-  const cheapest = ads.filter((a) => a.applications >= 2).map((a) => ({ ...a, cpa: a.spend / a.applications })).sort((a, b) => a.cpa - b.cpa)[0];
-  const ctr = ads.filter((a) => a.impressions >= 1000).map((a) => ({ ...a, ctr: a.clicks / a.impressions })).sort((a, b) => b.ctr - a.ctr)[0];
+/** Best results in the chosen window, in the spirit of the New Velocity highlights. */
+export function highlights(d: Data, p: Period) {
+  const w = windowFor(d, p);
+  const names = new Map(d.adTotals.map((a) => [a.id, a.name]));
+  // Per-ad totals for the window from daily ad rows (falls back to whole-period totals if those aren't saved).
+  let ads: { id: string; name: string; spend: number; impressions: number; clicks: number; applications: number }[];
+  if (d.adDaily.length) {
+    const by = new Map<string, { id: string; name: string; spend: number; impressions: number; clicks: number; applications: number }>();
+    for (const r of d.adDaily) {
+      if (r.day < w.since || r.day > w.until) continue;
+      const t = by.get(r.id) ?? { id: r.id, name: names.get(r.id) ?? `Ad ${r.id}`, spend: 0, impressions: 0, clicks: 0, applications: 0 };
+      t.spend += r.spend; t.impressions += r.impressions; t.clicks += r.clicks; t.applications += (r.applications || 0) + (r.leads || 0);
+      by.set(r.id, t);
+    }
+    ads = [...by.values()];
+  } else {
+    ads = d.adTotals.map((a) => ({ ...a }));
+  }
+  ads = ads.filter((a) => a.spend > 0);
   const totalApps = sum(ads, (a) => a.applications);
   const totalSpend = sum(ads, (a) => a.spend);
-  // Best week (Monday start) for applications.
-  const weeks = new Map<string, number>();
-  for (const r of d.ads.filter(isApp)) {
-    const dt = new Date(`${r.day}T00:00:00Z`);
-    dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
-    const k = dt.toISOString().slice(0, 10);
-    weeks.set(k, (weeks.get(k) ?? 0) + r.results);
+  const totalImpr = sum(ads, (a) => a.impressions);
+  const topAd = [...ads].filter((a) => a.applications > 0).sort((a, b) => b.applications - a.applications || a.spend - b.spend)[0];
+  const minApps = totalApps >= 10 ? 2 : 1;
+  const cheapest = ads.filter((a) => a.applications >= minApps).map((a) => ({ ...a, cpa: a.spend / a.applications })).sort((a, b) => a.cpa - b.cpa)[0];
+  const minImpr = Math.min(1000, Math.max(200, totalImpr * 0.02));
+  const ctr = ads.filter((a) => a.impressions >= minImpr).map((a) => ({ ...a, ctr: a.clicks / a.impressions })).sort((a, b) => b.ctr - a.ctr)[0];
+  // Best week (Monday start), or best day for a window of a week or less.
+  const short = (Date.parse(w.until) - Date.parse(w.since)) / 86400000 < 7;
+  const buckets = new Map<string, number>();
+  for (const r of d.ads.filter((x) => isApp(x) && x.day >= w.since && x.day <= w.until)) {
+    let k = r.day;
+    if (!short) {
+      const dt = new Date(`${r.day}T00:00:00Z`);
+      dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+      k = dt.toISOString().slice(0, 10);
+    }
+    buckets.set(k, (buckets.get(k) ?? 0) + r.results);
   }
-  const bestWeek = [...weeks.entries()].sort((a, b) => b[1] - a[1])[0];
-  const meta = introStats(d.intros.filter((r) => isMeta(r.ad_channel)));
-  const metaWins = d.wins.filter((w) => isMeta(w.channel)).length;
-  const tri = triageStats(d.triage);
+  const best = [...buckets.entries()].sort((a, b) => b[1] - a[1])[0];
+  // Close rate only over months that have an intro log (Sept on), so deals and intros line up.
+  const ms = w.months.filter((m) => m >= SHEET_START);
+  const meta = introStats(d.intros.filter((r) => ms.includes(r.month) && isMeta(r.ad_channel)));
+  const metaWins = d.wins.filter((x) => ms.includes(x.close_month) && isMeta(x.channel)).length;
+  const tri = triageStats(d.triage.filter((t) => t.date >= w.since && t.date <= w.until));
   return {
+    since: w.since,
+    until: w.until,
     topAd: topAd ? { name: topAd.name, applications: topAd.applications, share: div(topAd.applications, totalApps) } : null,
     cheapest: cheapest ? { name: cheapest.name, cpa: cheapest.cpa, overall: div(totalSpend, totalApps) } : null,
     ctr: ctr ? { name: ctr.name, ctr: ctr.ctr, cpc: div(ctr.spend, ctr.clicks) } : null,
-    bestWeek: bestWeek ? { week: bestWeek[0], applications: bestWeek[1] } : null,
-    closeRate: { rate: div(metaWins, meta.completed), won: metaWins, completed: meta.completed },
+    best: best ? { key: best[0], applications: best[1], isDay: short } : null,
+    closeRate: { rate: div(metaWins, meta.completed), won: metaWins, completed: meta.completed, months: ms },
     triage: tri,
   };
 }

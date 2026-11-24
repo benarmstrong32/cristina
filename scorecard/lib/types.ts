@@ -75,6 +75,8 @@ export type Applicant = {
   why?: string;
 };
 
+export type AdDay = { day: string; id: string; spend: number; impressions: number; clicks: number; applications: number; leads: number };
+
 export type Creative = { format?: string; image?: string; headline?: string; body?: string; about?: string; adset?: string };
 
 export type Data = {
@@ -86,6 +88,7 @@ export type Data = {
   wins: Win[];
   triage: Triage[];
   adTotals: AdTotal[];
+  adDaily: AdDay[];
   adTotalsThrough: string;
   creatives: Record<string, Creative>;
   applicants: Applicant[];
