@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { requireSession } from "@/lib/auth";
 import { getData } from "@/lib/data";
 import {
@@ -166,53 +167,62 @@ function People({ d, period }: { d: Data; period: Period }) {
   const o = overview(d, period);
   const ps = d.applicants.filter((a) => inWindow(a, o.since, o.until)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   const supers = ps.filter((a) => a.superQualified).length;
+  const stars = d.applicants.filter((a) => a.superQualified).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   return (
     <>
       <NeedsPeople d={d} />
-      <div className="grid kpis">
+      <div className="grid kpis four">
         <Kpi tone="lead" label="Applications" value={num(ps.filter((a) => a.status === "submitted").length)} hint="Submitted the Unlimited Video application" />
         <Kpi tone="partial" label="Partial applications" value={num(ps.filter((a) => a.status === "partial").length)} hint="Started but didn't submit" />
+        <Kpi tone="cost" label="Disqualified by the form" value={num(ps.filter((a) => a.disqualified).length)} hint="Mostly revenue under $250K" />
         <Kpi tone="qualified" label="Super qualified ★" value={num(supers)} hint="Click a ★ to see why" />
       </div>
-      <h2 className="section">Everyone who applied <span className="sub">newest first · click a name for every answer and detail</span></h2>
-      <div className="card table-wrap">
-        <table className="people">
-          <thead><tr><th></th><th>Name</th><th>Company</th><th>Applied</th><th>Status</th><th>Stage</th><th>Calls</th><th></th></tr></thead>
-          <tbody>
-            {ps.map((a) => (
-              <tr key={a.contactId}>
-                <td>{a.superQualified ? (
-                  <details><summary className="star-btn" title="Why super qualified">★</summary><div className="why">{a.why}</div></details>
-                ) : null}</td>
-                <td className="wrap">
-                  <details className="person">
-                    <summary><strong>{a.name || "—"}</strong></summary>
-                    <dl className="answers">
-                      {a.email && <><dt>Email</dt><dd>{a.email}</dd></>}
-                      {a.phone && <><dt>Phone</dt><dd>{a.phone}</dd></>}
-                      {a.website && <><dt>Website</dt><dd>{a.website}</dd></>}
-                      {a.source && <><dt>Source</dt><dd>{a.source}</dd></>}
-                      {a.tags?.length ? <><dt>Tags</dt><dd>{a.tags.join(", ")}</dd></> : null}
-                      {a.answers.map((x, i) => <><dt key={`q${i}`}>{x.question}</dt><dd key={`a${i}`}>{x.answer || "—"}</dd></>)}
-                      {a.calls?.map((c, i) => <><dt key={`c${i}`}>Call {shortDate(c.date)}</dt><dd key={`cd${i}`}>{c.title} · {c.status}</dd></>)}
-                    </dl>
-                  </details>
-                </td>
-                <td className="wrap">{a.company || "—"}</td>
-                <td>{shortDate(a.createdAt)}</td>
-                <td><span className={`pill ${a.status === "submitted" ? "good" : "warn"}`}>{a.status === "submitted" ? "Submitted" : "Partial"}</span></td>
-                <td className="wrap">{a.stage ?? "—"}</td>
-                <td className="wrap">{a.calls?.length ? a.calls.map((c) => `${shortDate(c.date)} ${c.status}`).join(", ") : "—"}</td>
-                <td>{a.ghlUrl ? <a href={a.ghlUrl} target="_blank" rel="noreferrer">Open in GHL ↗</a> : null}</td>
-              </tr>
+      {stars.length ? (
+        <>
+          <h2 className="section">★ Super qualified <span className="sub">$1M+ revenue, a decision-maker, and a clear buying signal · since Sept 1</span></h2>
+          <div className="grid two">
+            {stars.map((a) => (
+              <div className="card notable-card" key={a.contactId}>
+                <div className="notable-head"><span className="notable-company">★ {a.company || a.name}</span>{a.ghlUrl ? <a className="ad-links" href={a.ghlUrl} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>Open in GHL ↗</a> : null}</div>
+                <div className="notable-lead">{a.name}<span> · applied {shortDate(a.createdAt)}{a.stage && a.stage !== "Disqualified by the form" ? ` · ${a.stage}` : ""}</span></div>
+                <p>{a.why}</p>
+              </div>
             ))}
-            {!ps.length && d.applicants.length ? <tr><td colSpan={8}>No applications in this period.</td></tr> : null}
-          </tbody>
-        </table>
+          </div>
+        </>
+      ) : null}
+      <h2 className="section">Everyone who applied <span className="sub">newest first · click anyone for every answer and detail</span></h2>
+      <div className="people-list">
+        {ps.map((a) => (
+          <details className="card person" key={a.contactId}>
+            <summary className="person-row">
+              <span className="star">{a.superQualified ? "★" : ""}</span>
+              <span className="pname">{a.name || <span className="muted">No name given</span>}</span>
+              <span className="pco">{a.company || "—"}</span>
+              <span className="pdate">{shortDate(a.createdAt)}</span>
+              <span><span className={`pill ${a.status === "submitted" ? (a.disqualified ? "bad" : "good") : "warn"}`}>{a.status === "submitted" ? (a.disqualified ? "Disqualified" : "Submitted") : "Partial"}</span></span>
+              <span className="pstage">{a.stage && a.stage !== "Disqualified by the form" ? a.stage : ""}</span>
+            </summary>
+            {a.superQualified ? <div className="why">★ {a.why}</div> : null}
+            <dl className="answers">
+              {a.email ? <><dt>Email</dt><dd>{a.email}</dd></> : null}
+              {a.phone ? <><dt>Phone</dt><dd>{a.phone}</dd></> : null}
+              {a.answers.map((x, i) => <Fragment key={i}><dt>{x.question}</dt><dd>{x.answer || "—"}</dd></Fragment>)}
+              {a.calls?.length ? <><dt>Calls</dt><dd>{a.calls.map((c) => `${shortDate(c.date)} · ${c.title} · ${c.status}`).join("\n")}</dd></> : null}
+              {a.attribution?.adId ? <><dt>Ad clicked</dt><dd>{adName(d, a.attribution.adId)}</dd></> : null}
+              {a.source ? <><dt>Source</dt><dd>{a.source}</dd></> : null}
+              {a.tags?.length ? <><dt>Tags</dt><dd>{a.tags.join(", ")}</dd></> : null}
+            </dl>
+            {a.ghlUrl ? <p style={{ margin: "10px 0 0" }}><a href={a.ghlUrl} target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontSize: 13 }}>Open in GHL ↗</a></p> : null}
+          </details>
+        ))}
+        {!ps.length && d.applicants.length ? <div className="card">No applications in this period.</div> : null}
       </div>
     </>
   );
 }
+
+const adName = (d: Data, id: string) => d.adTotals.find((x) => x.id === id)?.name ?? `Ad ${id}`;
 
 function WhichAd({ d, period }: { d: Data; period: Period }) {
   const o = overview(d, period);
@@ -240,7 +250,7 @@ function WhichAd({ d, period }: { d: Data; period: Period }) {
               <table className="ad-people"><tbody>
                 {people.map((p) => (
                   <tr key={p.contactId}>
-                    <td><strong>{p.superQualified ? "★ " : ""}{p.name}</strong>{p.company ? <span style={{ color: "var(--text-3)" }}> · {p.company}</span> : null}</td>
+                    <td><strong>{p.superQualified ? "★ " : ""}{p.name || "No name given"}</strong>{p.company ? <span style={{ color: "var(--text-3)" }}> · {p.company}</span> : null}</td>
                     <td className="muted">{p.status === "submitted" ? "Applied" : "Started, did not finish"}{p.stage ? ` · ${p.stage}` : ""}</td>
                     <td className="r">{p.ghlUrl ? <a href={p.ghlUrl} target="_blank" rel="noreferrer">Open in GHL ↗</a> : null}</td>
                   </tr>

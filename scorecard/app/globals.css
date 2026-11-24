@@ -413,3 +413,15 @@ th { background: transparent; }
 .answers dd { margin: 0; white-space: normal; }
 details.person > summary { cursor: pointer; list-style: none; }
 details.person > summary::-webkit-details-marker { display: none; }
+
+.people-list { display: grid; gap: 6px; }
+.people-list details.person { padding: 10px 14px; }
+.person-row { display: grid; grid-template-columns: 18px minmax(140px, 1.2fr) minmax(140px, 1.4fr) 70px 110px minmax(100px, 1fr); gap: 10px; align-items: center; font-size: 14px; }
+.person-row .star { color: #b7791f; font-weight: 700; }
+.person-row .pname { font-weight: 600; }
+.person-row .pco, .person-row .pstage { color: var(--text-2); }
+.person-row .pdate { color: var(--text-3); font-size: 13px; }
+.person-row .muted { color: var(--text-3); font-weight: 400; }
+.person[open] .person-row { padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.answers dd { white-space: pre-line; }
+@media (max-width: 760px) { .person-row { grid-template-columns: 18px 1fr auto; } .person-row .pco, .person-row .pstage, .person-row .pdate { display: none; } }

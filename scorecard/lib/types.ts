@@ -68,6 +68,7 @@ export type Applicant = {
   answers: { question: string; answer: string }[];
   calls?: { date: string; title: string; status: string }[];
   ghlUrl?: string;
+  disqualified?: boolean;
   superQualified?: boolean;
   why?: string;
 };
