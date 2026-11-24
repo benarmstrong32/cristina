@@ -128,7 +128,7 @@ function Overview({ d, period }: { d: Data; period: Period }) {
       <h2 className="section">Month by month <span className="sub">the current month is still in progress</span></h2>
       <div className="grid two">
         <div className="card"><p className="chart-title">Meta spend</p><MonthBars data={ms.map((m) => ({ month: m.month, value: m.spend }))} color="var(--t-spend)" format="usd" label="Meta spend by month" /></div>
-        <div className="card"><p className="chart-title">Revenue won from Meta (by close month)</p><MonthBars data={ms.map((m) => ({ month: m.month, value: m.metaRevenue }))} color="var(--t-sale)" format="usd" label="Revenue won from Meta by month" /></div>
+        <div className="card"><p className="chart-title">Revenue won from Meta (by close month)</p><MonthBars data={ms.map((m) => ({ month: m.month, value: m.metaRevenue }))} color="var(--gold)" format="usd" label="Revenue won from Meta by month" /></div>
       </div>
     </>
   );

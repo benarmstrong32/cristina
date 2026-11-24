@@ -439,3 +439,84 @@ details.person > summary::-webkit-details-marker { display: none; }
 .ad-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--text-2); }
 .ad-stats b { color: var(--text); }
 .goal-bar.over { background: var(--warning); }
+
+
+/* ───────── 9miles brand: near-black, off-white, 9MM blue, gold used sparingly ───────── */
+:root {
+  --navy: #0f131d; --navy-2: #0f131d; --cyan: #fcc319;
+  --bg: #f6f6f5; --surface: #ffffff; --surface-2: #efefef; --border: #e2e2df;
+  --text: #0f131d; --text-2: #4a4d55; --text-3: #7c7f86;
+  --accent: #0e75db; --gold: #fcc319; --good: #1e8e3e; --critical: #c9372c; --warning: #b77900;
+  --t-spend: #0e75db; --t-spend-bg: #ffffff; --t-lead: #0f131d; --t-lead-bg: #ffffff;
+  --t-partial: #0f131d; --t-partial-bg: #ffffff; --t-qualified: #1e8e3e; --t-qualified-bg: #ffffff;
+  --t-booked: #0e75db; --t-booked-bg: #ffffff; --t-cost: #7c7f86; --t-cost-bg: #ffffff;
+  --t-sale: #0f131d; --t-sale-bg: #ffffff; --t-reroute: #0f131d; --t-reroute-bg: #ffffff; --t-pdf: #0f131d; --t-pdf-bg: #ffffff;
+  --font-head: "Oswald", "Arial Narrow", Impact, sans-serif;
+  --font-body: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --navy: #0f131d; --navy-2: #0f131d;
+    --bg: #0b0e15; --surface: #141925; --surface-2: #1c2230; --border: #262d3c;
+    --text: #f6f6f5; --text-2: #c4c6cc; --text-3: #8d9099; --accent: #4a9bf0;
+    --t-spend: #4a9bf0; --t-lead: #f6f6f5; --t-partial: #f6f6f5; --t-booked: #4a9bf0; --t-sale: #f6f6f5; --t-cost: #8d9099;
+    --t-spend-bg: var(--surface); --t-lead-bg: var(--surface); --t-partial-bg: var(--surface); --t-qualified-bg: var(--surface);
+    --t-booked-bg: var(--surface); --t-cost-bg: var(--surface); --t-sale-bg: var(--surface);
+  }
+}
+body { font-family: var(--font-body); font-size: 14px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Header: white band, black lockup, gold accent bar */
+.topbar { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; border-radius: 12px; padding: 14px 18px; }
+.topbar::after { display: none; }
+.brand { gap: 14px; flex-wrap: wrap; }
+.brand-logo { height: 34px; width: auto; display: block; }
+.brand-sub { font-family: var(--font-body); font-weight: 700; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-2); padding-left: 14px; border-left: 2px solid var(--gold); line-height: 1.2; }
+.who { color: var(--text-2); }
+.topbar .btn-link { color: var(--text); border-color: var(--border); background: var(--surface); }
+.topbar .btn-link:hover { background: var(--surface-2); border-color: var(--text-3); }
+.btn-link { font-family: var(--font-body); }
+
+/* Section headings: Oswald, uppercase, skewed gold bar */
+h2.section { font-family: var(--font-head); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; font-size: 17px; }
+h2.section .sub { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-weight: 500; }
+h2.section::before { width: 14px; height: 6px; border-radius: 1px; background: var(--gold); transform: skewX(-25deg); }
+.period-label { font-family: var(--font-head); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: 16px; color: var(--text); }
+
+/* Numbers */
+.kpi .value, .hl .big, .adset-days { font-family: var(--font-head); font-weight: 600; letter-spacing: 0; }
+.kpi .value { font-size: 32px; }
+.kpi .label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.kpi .label::before { background: var(--tone, var(--text-3)); }
+.kpi { border-top: 1px solid var(--border); }
+.hl { border-left: 3px solid var(--gold); }
+.hl .label { color: var(--text-2); }
+.f-num { font-family: var(--font-head); font-weight: 600; font-size: 17px; }
+.f-num small { font-family: var(--font-body); }
+
+/* Controls */
+.range a[aria-current="true"], .custom-range > summary[aria-current="true"], .subtabs a[aria-current="page"] { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .range a[aria-current="true"], :root:not([data-theme="light"]) .subtabs a[aria-current="page"], :root:not([data-theme="light"]) .custom-range > summary[aria-current="true"] { background: var(--text); color: var(--bg); border-color: var(--text); } }
+.subtabs a:hover { border-color: var(--text); color: var(--text); }
+.tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--gold); }
+.custom-range button, .login button { background: var(--accent); }
+.freshness { border-left: 3px solid var(--gold); }
+.notice { border-left: 3px solid var(--accent); }
+
+/* Goal bars, links, stars */
+.goal-bar { background: var(--accent); }
+.goal-bar.met { background: var(--good); }
+.goal-bar.over { background: var(--gold); }
+.ad-links a, .ad-people a, table.people a { color: var(--accent); }
+.star-btn, .person-row .star { color: #c99700; }
+.why { background: #fffbea; border-color: var(--gold); color: var(--text); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .why { background: #2a2410; } }
+.notable-card { border-left: 3px solid var(--gold); }
+.ad-card { border-left: 1px solid var(--border); }
+
+/* Login: off-white with the black lockup */
+.login { background: var(--bg); }
+.login form { box-shadow: 0 10px 30px rgb(15 19 29 / 0.08); border-top: 4px solid var(--gold); }
+.login-logo { height: 40px; width: auto; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .login-logo { filter: invert(1); } }

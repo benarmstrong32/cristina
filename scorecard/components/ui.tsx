@@ -9,11 +9,11 @@ export function TopBar({ session }: { session: Session }) {
   return (
     <header className="topbar">
       <div className="brand">
-        <img className="brand-icon" src="/icon.svg" alt="" width={36} height={36} />
-        <div>
-          <h1>9miles Media</h1>
-          <span className="by">Growth scorecard</span>
-        </div>
+        <picture>
+          <source srcSet="/brand/logo-white.png" media="(prefers-color-scheme: dark)" />
+          <img className="brand-logo" src="/brand/logo-black.png" alt="9miles Media" width={186} height={40} />
+        </picture>
+        <span className="brand-sub">Growth Scorecard</span>
       </div>
       <div className="who">
         <span>{session.name}</span>

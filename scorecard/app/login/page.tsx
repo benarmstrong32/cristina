@@ -3,7 +3,8 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   return (
     <main className="login">
       <form className="card" method="post" action="/api/login">
-        <h1 style={{ margin: "0 0 4px", fontSize: 20 }}>Sign in</h1>
+        <img className="login-logo" src="/brand/logo-black.png" alt="9miles Media" width={200} height={43} />
+        <h1 style={{ margin: "8px 0 4px", fontSize: 20 }}>Sign in</h1>
         <p style={{ margin: 0, color: "var(--text-3)", fontSize: 13 }}>9miles Growth Scorecard</p>
         <label>Email<input name="email" type="email" autoComplete="username" required /></label>
         <label>Password<input name="password" type="password" autoComplete="current-password" required /></label>
