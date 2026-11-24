@@ -3,7 +3,7 @@ import type { Session } from "@/lib/session";
 import type { Data } from "@/lib/types";
 import { RANGES, periodQuery, type Period } from "@/lib/metrics";
 import { dateTime, shortDate } from "@/lib/format";
-import { REFRESH_HOURS, START } from "@/config/scorecard";
+import { START } from "@/config/scorecard";
 
 export function TopBar({ session }: { session: Session }) {
   return (
@@ -88,20 +88,15 @@ export function Freshness({ d, back }: { d: Data; back: string }) {
   return (
     <div className="freshness">
       <span>
-        {d.adsLive ? (
-          <>Meta live · updated {dateTime(d.generatedAt)} ET · refreshes every {REFRESH_HOURS} hours</>
-        ) : (
-          <>Meta ad numbers through {shortDate(d.adsThrough)}</>
-        )}
-        {" "}· intros and deals from the sales ops sheet, updated {shortDate(d.sheetSavedAt)}
+        {d.adsLive ? <>Meta live · updated {dateTime(d.generatedAt)} ET</> : <>Meta through {shortDate(d.adsThrough)}</>}
+        {" "}· people from GoHighLevel {d.applicantsSavedAt ? `as of ${shortDate(d.applicantsSavedAt)}` : ""}
+        {" "}· intros, triage and deals from the sales sheet as of {shortDate(d.sheetSavedAt)}
         {d.error ? <span className="fresh-err"> · Live update failed: {d.error}</span> : null}
       </span>
-      {d.adsLive && (
-        <form method="post" action="/api/refresh">
-          <input type="hidden" name="back" value={back} />
-          <button className="btn-link" type="submit">Refresh now</button>
-        </form>
-      )}
+      <form method="post" action="/api/refresh">
+        <input type="hidden" name="back" value={back} />
+        <button className="btn-link btn-refresh" type="submit">↻ Refresh</button>
+      </form>
     </div>
   );
 }

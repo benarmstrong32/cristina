@@ -521,3 +521,4 @@ h2.section::before { width: 14px; height: 6px; border-radius: 1px; background: v
 .login-logo { height: 40px; width: auto; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .login-logo { filter: invert(1); } }
 .pfunnel { display: block; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+.btn-refresh { font-weight: 600; white-space: nowrap; }
