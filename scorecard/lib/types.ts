@@ -32,6 +32,46 @@ export type Win = {
   counts_for_bonus: boolean;
 };
 
+export type Triage = {
+  month: string;
+  company: string;
+  date: string;
+  completed: string;
+  lead_source: string;
+  booked_intro: string;
+  notes: string;
+};
+
+export type AdTotal = {
+  id: string;
+  name: string;
+  status: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  applications: number;
+};
+
+export type Applicant = {
+  contactId: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  website?: string;
+  createdAt: string;
+  status: "submitted" | "partial";
+  stage?: string;
+  tags?: string[];
+  source?: string;
+  attribution?: { utmSource?: string; campaignId?: string; adsetId?: string; adId?: string; pageUrl?: string };
+  answers: { question: string; answer: string }[];
+  calls?: { date: string; title: string; status: string }[];
+  ghlUrl?: string;
+  superQualified?: boolean;
+  why?: string;
+};
+
 export type Data = {
   ads: AdRow[];
   adsThrough: string;
@@ -39,6 +79,11 @@ export type Data = {
   adsSavedAt?: string;
   intros: Intro[];
   wins: Win[];
+  triage: Triage[];
+  adTotals: AdTotal[];
+  adTotalsThrough: string;
+  applicants: Applicant[];
+  applicantsSavedAt?: string;
   sheetSavedAt: string;
   generatedAt: string;
   error?: string;

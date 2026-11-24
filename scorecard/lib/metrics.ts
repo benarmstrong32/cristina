@@ -1,32 +1,53 @@
 import {
-  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, START, channelForCampaign, isMeta,
+  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, SALES_GOAL_MONTHLY, START,
+  channelForCampaign, isMeta,
 } from "@/config/scorecard";
-import type { AdRow, Data, Intro, Win } from "./types";
+import type { AdRow, Data, Intro, Triage, Win } from "./types";
 
 export const RANGES = [
   { key: "7d", label: "Last 7 days" },
   { key: "30d", label: "Last 30 days" },
-  { key: "all", label: "All time" },
+  { key: "max", label: "Maximum" },
 ] as const;
-export type RangeKey = (typeof RANGES)[number]["key"];
-export const parseRange = (r?: string): RangeKey => (RANGES.some((x) => x.key === r) ? (r as RangeKey) : "30d");
+export type RangeKey = (typeof RANGES)[number]["key"] | "custom";
+export type Period = { range: RangeKey; from?: string; to?: string };
+
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+export function parsePeriod(sp: { range?: string; from?: string; to?: string }): Period {
+  if (sp.range === "custom" && sp.from && sp.to && ISO.test(sp.from) && ISO.test(sp.to)) {
+    return sp.from <= sp.to ? { range: "custom", from: sp.from, to: sp.to } : { range: "custom", from: sp.to, to: sp.from };
+  }
+  return { range: RANGES.some((x) => x.key === sp.range) ? (sp.range as RangeKey) : "30d" };
+}
+export const periodQuery = (p: Period): Record<string, string> =>
+  p.range === "custom" ? { range: "custom", from: p.from!, to: p.to! } : { range: p.range };
 
 const sum = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((s, x) => s + (f(x) || 0), 0);
 const div = (a: number, b: number) => (b ? a / b : null);
-const addDays = (day: string, n: number) => {
+export const addDays = (day: string, n: number) => {
   const d = new Date(`${day}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 };
 const isApp = (r: AdRow) => r.result_type.includes("submit_application");
-const yes = (v: string) => String(v).trim().toLowerCase() === "yes";
+export const yes = (v: string) => String(v).trim().toLowerCase() === "yes";
+const no = (v: string) => String(v).trim().toLowerCase() === "no";
 
-/** Window for the range. Intros and wins are logged by month, so 7/30-day views use the current month. */
-export function windowFor(d: Data, range: RangeKey) {
-  const until = d.adsThrough;
-  const since = range === "7d" ? addDays(until, -6) : range === "30d" ? addDays(until, -29) : START;
-  const months = range === "all" ? null : [until.slice(0, 7)];
-  return { since, until, months };
+/**
+ * The date window. Meta numbers and triage calls (which have dates) use it exactly. Intros and deals are logged by
+ * month, so they use every month that starts inside the window, plus the month the window ends in.
+ */
+export function windowFor(d: Data, p: Period) {
+  const latest = d.adsThrough;
+  let since: string, until: string;
+  if (p.range === "custom") { since = p.from!; until = p.to!; }
+  else if (p.range === "max") { since = START; until = latest; }
+  else { until = latest; since = addDays(until, p.range === "7d" ? -6 : -29); }
+  const months = new Set<string>([until.slice(0, 7)]);
+  for (let m = since.slice(0, 7); m <= until.slice(0, 7); m = addDays(`${m}-28`, 7).slice(0, 7)) {
+    if (`${m}-01` >= since) months.add(m);
+  }
+  return { since, until, months: [...months].sort() };
 }
 
 function adStats(rows: AdRow[]) {
@@ -34,24 +55,34 @@ function adStats(rows: AdRow[]) {
   const impressions = sum(rows, (r) => r.impressions);
   const clicks = sum(rows, (r) => r.clicks);
   const applications = sum(rows.filter(isApp), (r) => r.results);
-  return { spend, impressions, clicks, applications, ctr: div(clicks, impressions), cpc: div(spend, clicks), cpa: div(spend, applications) };
+  return { spend, impressions, clicks, applications, ctr: div(clicks, impressions), cpc: div(spend, clicks), cpa: div(spend, applications), cpm: impressions ? (spend / impressions) * 1000 : null };
 }
 
-function introStats(xs: Intro[]) {
+export function introStats(xs: Intro[]) {
   const completed = xs.filter((r) => yes(r.completed)).length;
-  const missed = xs.filter((r) => String(r.completed).trim().toLowerCase() === "no").length;
+  const missed = xs.filter((r) => no(r.completed)).length;
   return { booked: xs.length, completed, missed, other: xs.length - completed - missed, showRate: div(completed, completed + missed) };
 }
 
-const revenue = (ws: Win[]) => sum(ws, (w) => w.contract_value ?? 0);
+export function triageStats(xs: Triage[]) {
+  const completed = xs.filter((r) => yes(r.completed)).length;
+  const missed = xs.filter((r) => no(r.completed)).length;
+  const bookedIntro = xs.filter((r) => yes(r.booked_intro)).length;
+  return { calls: xs.length, completed, missed, showRate: div(completed, completed + missed), bookedIntro, introRate: div(bookedIntro, completed) };
+}
 
-export function overview(d: Data, range: RangeKey) {
-  const w = windowFor(d, range);
-  const inMonths = (m: string) => w.months === null || w.months.includes(m);
+const revenue = (ws: Win[]) => sum(ws, (w) => w.contract_value ?? 0);
+const monthlyValue = (ws: Win[]) => sum(ws, (w) => w.monthly_value ?? 0);
+
+export function overview(d: Data, p: Period) {
+  const w = windowFor(d, p);
+  const inMonths = (m: string) => w.months.includes(m);
   const ads = adStats(d.ads.filter((r) => r.day >= w.since && r.day <= w.until));
   const salesSpend = sum(d.ads.filter((r) => inMonths(r.day.slice(0, 7))), (r) => r.spend);
-  const metaIntros = introStats(d.intros.filter((r) => inMonths(r.month) && isMeta(r.ad_channel)));
+  const metaIntroRows = d.intros.filter((r) => inMonths(r.month) && isMeta(r.ad_channel));
+  const metaIntros = introStats(metaIntroRows);
   const allIntros = introStats(d.intros.filter((r) => inMonths(r.month)));
+  const triage = triageStats(d.triage.filter((t) => t.date >= w.since && t.date <= w.until));
   const metaWins = d.wins.filter((x) => inMonths(x.close_month) && isMeta(x.channel));
   const allWins = d.wins.filter((x) => inMonths(x.close_month));
   const metaRevenue = revenue(metaWins);
@@ -61,6 +92,7 @@ export function overview(d: Data, range: RangeKey) {
     salesSpend,
     metaIntros,
     allIntros,
+    triage,
     metaWins: metaWins.length,
     metaRevenue,
     allWins: allWins.length,
@@ -68,7 +100,19 @@ export function overview(d: Data, range: RangeKey) {
     roas: div(metaRevenue, salesSpend),
     cac: metaWins.length ? salesSpend / metaWins.length : null,
     costPerCompleted: div(salesSpend, metaIntros.completed),
+    closeRate: div(metaWins.length, metaIntros.completed),
   };
+}
+
+/** Meta funnel: clicks → applications → intros booked → completed → deals won. Triage calls sit beside it (logged since Nov). */
+export function funnel(o: ReturnType<typeof overview>) {
+  return [
+    { label: "Clicks", value: o.ads.clicks, note: "Meta, exact dates" },
+    { label: "Applications", value: o.ads.applications, note: "as Meta reports them" },
+    { label: "Intros booked", value: o.metaIntros.booked, note: "from Meta" },
+    { label: "Intros completed", value: o.metaIntros.completed, note: "from Meta" },
+    { label: "Deals won", value: o.metaWins, note: "from Meta" },
+  ];
 }
 
 export function daily(d: Data, since: string, until: string) {
@@ -80,30 +124,81 @@ export function daily(d: Data, since: string, until: string) {
   return out;
 }
 
+/** This month's goals: completed intros and new monthly value won. */
+export function goals(d: Data) {
+  const m = d.adsThrough.slice(0, 7);
+  const st = introStats(d.intros.filter((r) => r.month === m));
+  const won = d.wins.filter((w) => w.close_month === m);
+  return {
+    month: m,
+    introGoal: INTRO_GOALS[m] ?? DEFAULT_INTRO_GOAL,
+    completed: st.completed,
+    salesGoal: SALES_GOAL_MONTHLY,
+    wonMonthly: monthlyValue(won),
+    wonTotal: revenue(won),
+    deals: won.length,
+  };
+}
+
+/** Best results since Sept 1, in the spirit of the New Velocity highlights. */
+export function highlights(d: Data) {
+  const ads = d.adTotals.filter((a) => a.spend > 0);
+  const topAd = [...ads].sort((a, b) => b.applications - a.applications || a.spend - b.spend)[0];
+  const cheapest = ads.filter((a) => a.applications >= 2).map((a) => ({ ...a, cpa: a.spend / a.applications })).sort((a, b) => a.cpa - b.cpa)[0];
+  const ctr = ads.filter((a) => a.impressions >= 1000).map((a) => ({ ...a, ctr: a.clicks / a.impressions })).sort((a, b) => b.ctr - a.ctr)[0];
+  const totalApps = sum(ads, (a) => a.applications);
+  const totalSpend = sum(ads, (a) => a.spend);
+  // Best week (Monday start) for applications.
+  const weeks = new Map<string, number>();
+  for (const r of d.ads.filter(isApp)) {
+    const dt = new Date(`${r.day}T00:00:00Z`);
+    dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+    const k = dt.toISOString().slice(0, 10);
+    weeks.set(k, (weeks.get(k) ?? 0) + r.results);
+  }
+  const bestWeek = [...weeks.entries()].sort((a, b) => b[1] - a[1])[0];
+  const meta = introStats(d.intros.filter((r) => isMeta(r.ad_channel)));
+  const metaWins = d.wins.filter((w) => isMeta(w.channel)).length;
+  const tri = triageStats(d.triage);
+  return {
+    topAd: topAd ? { name: topAd.name, applications: topAd.applications, share: div(topAd.applications, totalApps) } : null,
+    cheapest: cheapest ? { name: cheapest.name, cpa: cheapest.cpa, overall: div(totalSpend, totalApps) } : null,
+    ctr: ctr ? { name: ctr.name, ctr: ctr.ctr, cpc: div(ctr.spend, ctr.clicks) } : null,
+    bestWeek: bestWeek ? { week: bestWeek[0], applications: bestWeek[1] } : null,
+    closeRate: { rate: div(metaWins, meta.completed), won: metaWins, completed: meta.completed },
+    triage: tri,
+  };
+}
+
 /** Since Sept 1, one row per channel plus All Meta and All sources. */
-export function byChannel(d: Data) {
-  const ads = d.ads.map((r) => ({ ...r, channel: channelForCampaign(r.campaign) }));
-  const make = (channel: string, a: AdRow[], i: Intro[], w: Win[]) => {
+export function byChannel(d: Data, p: Period) {
+  const w = windowFor(d, p);
+  const inMonths = (m: string) => w.months.includes(m);
+  const ads = d.ads.filter((r) => inMonths(r.day.slice(0, 7))).map((r) => ({ ...r, channel: channelForCampaign(r.campaign) }));
+  const intros = d.intros.filter((r) => inMonths(r.month));
+  const wins = d.wins.filter((r) => inMonths(r.close_month));
+  const make = (channel: string, a: AdRow[], i: Intro[], ws: Win[]) => {
     const s = adStats(a);
     const st = introStats(i);
-    const rev = revenue(w);
+    const rev = revenue(ws);
     return {
       channel, spend: s.spend, applications: s.applications, booked: st.booked, completed: st.completed, showRate: st.showRate,
       costPerCompleted: s.spend && st.completed ? s.spend / st.completed : null,
-      won: w.length, revenue: rev, roas: s.spend ? rev / s.spend : null,
+      won: ws.length, revenue: rev, roas: s.spend ? rev / s.spend : null,
     };
   };
-  const rows = CHANNEL_ORDER.map((c) => make(c, ads.filter((r) => r.channel === c), d.intros.filter((r) => r.ad_channel === c), d.wins.filter((r) => r.channel === c)))
+  const rows = CHANNEL_ORDER.map((c) => make(c, ads.filter((r) => r.channel === c), intros.filter((r) => r.ad_channel === c), wins.filter((r) => r.channel === c)))
     .filter((r) => r.spend > 0 || r.booked > 0 || r.won > 0);
   return {
+    months: w.months,
     rows,
-    allMeta: make("All Meta", ads, d.intros.filter((r) => isMeta(r.ad_channel)), d.wins.filter((r) => isMeta(r.channel))),
-    all: make("All sources", ads, d.intros, d.wins),
+    allMeta: make("All Meta", ads, intros.filter((r) => isMeta(r.ad_channel)), wins.filter((r) => isMeta(r.channel))),
+    all: make("All sources", ads, intros, wins),
   };
 }
 
 export function months(d: Data) {
-  const ms = [...new Set([...d.ads.map((r) => r.day.slice(0, 7)), ...d.intros.map((r) => r.month), ...d.wins.map((w) => w.close_month)])].sort();
+  const ms = [...new Set([...d.ads.map((r) => r.day.slice(0, 7)), ...d.wins.map((w) => w.close_month)])].sort();
   return ms.map((m) => {
     const won = d.wins.filter((w) => w.close_month === m);
     const spend = sum(d.ads.filter((r) => r.day.startsWith(m)), (r) => r.spend);
@@ -114,7 +209,7 @@ export function months(d: Data) {
 
 /** Intros booked vs completed each month, with Cristina's bonus. */
 export function bonus(d: Data) {
-  const ms = [...new Set([...d.intros.map((r) => r.month), ...d.wins.map((w) => w.close_month)])].sort();
+  const ms = [...new Set([...d.intros.map((r) => r.month), ...d.wins.map((w) => w.close_month)])].filter((m) => m <= d.adsThrough.slice(0, 7)).sort();
   return ms.map((m) => {
     const st = introStats(d.intros.filter((r) => r.month === m));
     const goal = INTRO_GOALS[m] ?? DEFAULT_INTRO_GOAL;
@@ -123,6 +218,11 @@ export function bonus(d: Data) {
     const introBonus = met ? BONUS_GOAL : 0;
     return { month: m, ...st, goal, met, deals: deals.length, dealNames: deals.map((x) => x.company), introBonus, dealBonus: deals.length * BONUS_PER_DEAL, total: introBonus + deals.length * BONUS_PER_DEAL };
   });
+}
+
+export function triageByMonth(d: Data) {
+  const ms = [...new Set(d.triage.map((t) => t.month))].sort();
+  return ms.map((m) => ({ month: m, ...triageStats(d.triage.filter((t) => t.month === m)) }));
 }
 
 export function campaigns(d: Data, since: string, until: string) {

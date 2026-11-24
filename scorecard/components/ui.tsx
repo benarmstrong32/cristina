@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Session } from "@/lib/session";
 import type { Data } from "@/lib/types";
-import { RANGES, type RangeKey } from "@/lib/metrics";
+import { RANGES, periodQuery, type Period } from "@/lib/metrics";
 import { dateTime, shortDate } from "@/lib/format";
-import { REFRESH_HOURS } from "@/config/scorecard";
+import { REFRESH_HOURS, START } from "@/config/scorecard";
 
 export function TopBar({ session }: { session: Session }) {
   return (
@@ -27,31 +27,48 @@ export function TopBar({ session }: { session: Session }) {
 
 export const TABS = [
   { key: "overview", label: "Overview" },
+  { key: "funnel", label: "Funnel" },
+  { key: "people", label: "People" },
+  { key: "which-ad", label: "Which ad" },
+  { key: "ads", label: "Ads" },
   { key: "intros", label: "Intros & bonus" },
-  { key: "campaigns", label: "Campaigns" },
+  { key: "triage", label: "Triage calls" },
   { key: "deals", label: "Won deals" },
   { key: "log", label: "Intro log" },
+  { key: "how", label: "How we count" },
 ] as const;
 export type TabKey = (typeof TABS)[number]["key"];
 
-export function Controls({ range, view }: { range: RangeKey; view: TabKey }) {
+export function Controls({ period, view }: { period: Period; view: TabKey }) {
+  const q = (extra: Record<string, string>) => `/?${new URLSearchParams({ view, ...extra })}`;
   return (
-    <div className="controls">
-      <nav className="tabs" aria-label="Views">
+    <>
+      <div className="controls">
+        <span className="period-label">{RANGES.find((r) => r.key === period.range)?.label ?? "Custom range"}</span>
+        <div className="range-wrap">
+          <nav className="range" aria-label="Date range">
+            {RANGES.map((r) => (
+              <Link key={r.key} href={q({ range: r.key })} aria-current={r.key === period.range ? "true" : undefined}>{r.label}</Link>
+            ))}
+          </nav>
+          <details className="custom-range" open={period.range === "custom" ? true : undefined}>
+            <summary aria-current={period.range === "custom" ? "true" : undefined}>Custom</summary>
+            <form method="get" action="/">
+              <input type="hidden" name="view" value={view} />
+              <input type="hidden" name="range" value="custom" />
+              <label>From <input type="date" name="from" min={START} defaultValue={period.from ?? ""} required /></label>
+              <label>To <input type="date" name="to" min={START} defaultValue={period.to ?? ""} required /></label>
+              <button type="submit">Apply</button>
+            </form>
+          </details>
+        </div>
+      </div>
+      <nav className="subtabs" aria-label="Sections">
         {TABS.map((t) => (
-          <Link key={t.key} href={`/?${new URLSearchParams({ view: t.key, range })}`} aria-current={t.key === view ? "page" : undefined}>
-            {t.label}
-          </Link>
+          <Link key={t.key} href={`/?${new URLSearchParams({ view: t.key, ...periodQuery(period) })}`} aria-current={t.key === view ? "page" : undefined}>{t.label}</Link>
         ))}
       </nav>
-      <nav className="range" aria-label="Date range">
-        {RANGES.map((r) => (
-          <Link key={r.key} href={`/?${new URLSearchParams({ view, range: r.key })}`} aria-current={r.key === range ? "true" : undefined}>
-            {r.label}
-          </Link>
-        ))}
-      </nav>
-    </div>
+    </>
   );
 }
 
@@ -85,6 +102,30 @@ export function Freshness({ d, back }: { d: Data; back: string }) {
           <button className="btn-link" type="submit">Refresh now</button>
         </form>
       )}
+    </div>
+  );
+}
+
+export function Funnel({ steps }: { steps: { label: string; value: number | null; note?: string }[] }) {
+  const top = Math.max(1, ...steps.map((s) => s.value ?? 0));
+  return (
+    <div className="card funnel">
+      {steps.map((s, i) => {
+        const prev = i > 0 ? steps[i - 1].value : null;
+        const conv = s.value != null && prev ? s.value / prev : null;
+        return (
+          <div className="f-row" key={s.label}>
+            <div className="f-label">{s.label}{s.note ? <small style={{ display: "block", color: "var(--text-3)", fontSize: 12 }}>{s.note}</small> : null}</div>
+            <div className="f-track">
+              {s.value != null && <div className="f-bar" style={{ width: `${(s.value / top) * 100}%`, background: "var(--accent)" }} />}
+            </div>
+            <div className="f-num tnum">
+              {s.value ?? "—"}
+              {conv != null && <small>{Math.round(conv * 100)}% of prior</small>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

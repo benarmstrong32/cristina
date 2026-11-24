@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { unstable_cache } from "next/cache";
 import { AD_ACCOUNT_ID, REFRESH_HOURS, START } from "@/config/scorecard";
-import type { AdRow, Data, Intro, Win } from "./types";
+import type { AdRow, AdTotal, Applicant, Data, Intro, Triage, Win } from "./types";
 
 export const LIVE_TAG = "meta-live";
 
@@ -53,7 +53,18 @@ const cachedLiveAds = unstable_cache(
 /** Live Meta numbers when META_ACCESS_TOKEN is set (cached, cleared by Refresh); otherwise the saved copy. */
 export async function getData(): Promise<Data> {
   const sheet = await readJson("sheet.json");
-  const base = { intros: sheet.intros as Intro[], wins: sheet.wins as Win[], sheetSavedAt: sheet.savedAt as string };
+  const adFile = await readJson("meta-ads.json").catch(() => ({ ads: [], through: "" }));
+  const people = await readJson("applicants.json").catch(() => ({ people: [], savedAt: undefined }));
+  const base = {
+    applicants: people.people as Applicant[],
+    applicantsSavedAt: people.savedAt as string | undefined,
+    intros: sheet.intros as Intro[],
+    wins: sheet.wins as Win[],
+    triage: (sheet.triage ?? []) as Triage[],
+    adTotals: adFile.ads as AdTotal[],
+    adTotalsThrough: adFile.through as string,
+    sheetSavedAt: sheet.savedAt as string,
+  };
   const fromSaved = async (error?: string): Promise<Data> => {
     const saved = await readJson("meta-saved.json");
     return {

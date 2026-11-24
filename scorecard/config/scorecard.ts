@@ -7,6 +7,9 @@ export const REFRESH_HOURS = 3;
 export const INTRO_GOALS: Record<string, number> = { "2026-09": 20, "2026-10": 15, "2026-11": 15 };
 export const DEFAULT_INTRO_GOAL = 20;
 
+/** Monthly sales goal: new monthly value won ($/month), from the pipeline tab. */
+export const SALES_GOAL_MONTHLY = 30000;
+
 /** Cristina's bonus: $100 for meeting the completed-intro goal, plus $50 per qualifying deal closed. */
 export const BONUS_GOAL = 100;
 export const BONUS_PER_DEAL = 50;
