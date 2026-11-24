@@ -10,7 +10,7 @@ import { Controls, Freshness, Funnel, Kpi, TABS, TopBar, type TabKey } from "@/c
 import { BarChart } from "@/components/BarChart";
 import { MonthBars } from "@/components/MonthBars";
 import { AdPreview } from "@/components/AdPreview";
-import { BONUS_GOAL, BONUS_PER_DEAL } from "@/config/scorecard";
+import { BONUS_GOAL, BONUS_PER_DEAL, SHEET_START } from "@/config/scorecard";
 import type { Applicant, Data } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +34,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       <p className="period">
         {shortDate(o.since)} – {shortDate(o.until)} · Meta and triage calls use these exact dates · intros and deals use{" "}
         {o.months.map(monthLabel).join(", ")} (the sheet logs them by month)
+        {o.since < `${SHEET_START}-01` ? <> · the intro and triage logs start in Sept 2026, so earlier months show ad results and deals only</> : null}
       </p>
       {view === "overview" && <Overview d={d} period={period} />}
       {view === "funnel" && <FunnelTab d={d} period={period} />}
@@ -93,7 +94,7 @@ function Overview({ d, period }: { d: Data; period: Period }) {
         </div>
       </div>
 
-      <h2 className="section">Highlights <span className="sub">best results since Sept 1</span></h2>
+      <h2 className="section">Highlights <span className="sub">best results since the ads started in April</span></h2>
       <div className="grid hl-grid">
         <div className="card hl"><div className="label">Top ad for applications</div><div className="big">{h.topAd?.name ?? "—"}</div><p>{h.topAd ? `${h.topAd.applications} applications, ${pct(h.topAd.share, 0)} of all Meta applications.` : ""}</p></div>
         <div className="card hl"><div className="label">Lowest cost per application</div><div className="big">{usd(h.cheapest?.cpa ?? null)}</div><p>{h.cheapest ? `From “${h.cheapest.name}”, against ${usd(h.cheapest.overall)} across all ads.` : ""}</p></div>
@@ -179,14 +180,14 @@ function People({ d, period }: { d: Data; period: Period }) {
     <>
       <NeedsPeople d={d} />
       <div className="grid kpis four">
-        <Kpi tone="lead" label="Applications" value={num(ps.filter((a) => a.status === "submitted").length)} hint="Submitted the Unlimited Video application" />
+        <Kpi tone="lead" label="Applications & leads" value={num(ps.filter((a) => a.status === "submitted").length)} hint={funnelSplit(ps.filter((a) => a.status === "submitted"))} />
         <Kpi tone="partial" label="Partial applications" value={num(ps.filter((a) => a.status === "partial").length)} hint="Started but didn't submit" />
         <Kpi tone="cost" label="Disqualified by the form" value={num(ps.filter((a) => a.disqualified).length)} hint="Mostly revenue under $250K" />
         <Kpi tone="qualified" label="Super qualified ★" value={num(supers)} hint="Click a ★ to see why" />
       </div>
       {stars.length ? (
         <>
-          <h2 className="section">★ Super qualified <span className="sub">$1M+ revenue, a decision-maker, and a clear buying signal · since Sept 1</span></h2>
+          <h2 className="section">★ Super qualified <span className="sub">$1M+ revenue, a decision-maker, and a clear buying signal · all applicants</span></h2>
           <div className="grid two">
             {stars.map((a) => (
               <div className="card notable-card" key={a.contactId}>
@@ -205,7 +206,7 @@ function People({ d, period }: { d: Data; period: Period }) {
             <summary className="person-row">
               <span className="star">{a.superQualified ? "★" : ""}</span>
               <span className="pname">{a.name || <span className="muted">No name given</span>}</span>
-              <span className="pco">{a.company || "—"}</span>
+              <span className="pco">{a.company || "—"}{a.funnel ? <span className="pfunnel">{a.funnel}</span> : null}</span>
               <span className="pdate">{shortDate(a.createdAt)}</span>
               <span><span className={`pill ${a.status === "submitted" ? (a.disqualified ? "bad" : "good") : "warn"}`}>{a.status === "submitted" ? (a.disqualified ? "Disqualified" : "Submitted") : "Partial"}</span></span>
               <span className="pstage">
@@ -244,6 +245,12 @@ function TriageNote({ a }: { a: Applicant }) {
   }[t.state];
   const tone = t.state === "completed" ? "good" : t.state === "upcoming" || t.state === "booked" ? "warn" : "bad";
   return <span className={`tri ${tone}`}>{label}</span>;
+}
+
+function funnelSplit(xs: Applicant[]) {
+  const by = new Map<string, number>();
+  for (const a of xs) by.set(a.funnel ?? "Unlimited Video", (by.get(a.funnel ?? "Unlimited Video") ?? 0) + 1);
+  return [...by.entries()].map(([k, v]) => `${v} ${k}`).join(" · ") || "Submitted an application or lead form";
 }
 
 const adName = (d: Data, id: string) => d.adTotals.find((x) => x.id === id)?.name ?? `Ad ${id}`;
@@ -294,7 +301,7 @@ function Ads({ d, period }: { d: Data; period: Period }) {
   const statusPill = (s: string) => (s === "ACTIVE" ? <span className="pill good">Active</span> : <span className="pill">{s.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase())}</span>);
   return (
     <>
-      <h2 className="section">Active ads <span className="sub">ads running now, with results since Sept 1 (not affected by the date range)</span></h2>
+      <h2 className="section">Active ads <span className="sub">ads running now, with results since the ads started (not affected by the date range)</span></h2>
       <div className="ads-by-lead">
         {active.map((a) => <AdPreview key={a.id} ad={a} c={d.creatives[a.id]} />)}
       </div>
@@ -319,7 +326,7 @@ function Ads({ d, period }: { d: Data; period: Period }) {
         </table>
       </div>
       <details className="card expand" style={{ marginTop: 16 }}>
-        <summary>All ads since Sept 1, including paused</summary>
+        <summary>Every ad since April, including paused</summary>
         <div className="table-wrap">
           <table>
             <thead><tr><th>Ad</th><th>Status</th><th className="r">Spend</th><th className="r">CTR</th><th className="r">Applications</th><th className="r">Per application</th></tr></thead>
@@ -343,7 +350,7 @@ function Intros({ d }: { d: Data }) {
       <div className="grid kpis">
         <Kpi tone="booked" label={`Completed intros · ${cur ? monthLabel(cur.month) : ""}`} value={cur ? `${cur.completed} / ${cur.goal}` : "—"} hint={cur ? (cur.met ? "Goal met" : `${Math.max(0, cur.goal - cur.completed)} to go for the $${BONUS_GOAL}`) : undefined} />
         <Kpi tone="sale" label={`Cristina's bonus · ${cur ? monthLabel(cur.month) : ""}`} value={cur ? usd(cur.total) : "—"} hint={cur ? `${cur.deals} qualifying deal${cur.deals === 1 ? "" : "s"} so far` : undefined} />
-        <Kpi tone="cost" label="Cristina's bonus · since Sept 1" value={usd(total)} hint={`$${BONUS_GOAL} per goal met + $${BONUS_PER_DEAL} per deal`} />
+        <Kpi tone="cost" label="Cristina's bonus · since Sept" value={usd(total)} hint={`$${BONUS_GOAL} per goal met + $${BONUS_PER_DEAL} per deal`} />
       </div>
       <h2 className="section">Intros booked vs completed <span className="sub">dashed line = the month's completed-intro goal</span></h2>
       <div className="card">
@@ -420,7 +427,7 @@ function Deals({ d }: { d: Data }) {
   const ws = [...d.wins].sort((a, b) => (a.close_month < b.close_month ? 1 : a.close_month > b.close_month ? -1 : (b.contract_value ?? 0) - (a.contract_value ?? 0)));
   return (
     <>
-      <h2 className="section">Won deals <span className="sub">every deal closed since Sept 1, newest first</span></h2>
+      <h2 className="section">Won deals <span className="sub">every deal closed since the ads started in April, newest first</span></h2>
       <div className="card table-wrap">
         <table>
           <thead><tr><th>Closed</th><th>Company</th><th>Channel</th><th>Type</th><th className="r">Per month</th><th className="r">Months</th><th className="r">Contract value</th><th>Bonus deal</th></tr></thead>

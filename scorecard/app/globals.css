@@ -520,3 +520,4 @@ h2.section::before { width: 14px; height: 6px; border-radius: 1px; background: v
 .login form { box-shadow: 0 10px 30px rgb(15 19 29 / 0.08); border-top: 4px solid var(--gold); }
 .login-logo { height: 40px; width: auto; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .login-logo { filter: invert(1); } }
+.pfunnel { display: block; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }

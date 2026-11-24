@@ -1,6 +1,8 @@
 // Settings for the 9miles Growth Scorecard. Numbers that change (spend, intros, deals) live in data/.
 export const AD_ACCOUNT_ID = "1890396841064251"; // 9miles Media Ad Account
-export const START = "2026-09-01"; // The sales ops sheet starts in September 2026.
+export const START = "2026-04-01"; // First month the 9miles ad account spent (Apr 28, 2026).
+/** The intro log, triage log and Cristina's bonus start here (the sales ops sheet began tracking them in Sept 2026). */
+export const SHEET_START = "2026-09";
 export const REFRESH_HOURS = 3;
 
 /** Completed-intro goal per month (Intros Scorecard tab). Months not listed use DEFAULT_INTRO_GOAL. */
@@ -35,4 +37,5 @@ export const CHANNEL_ORDER = [
   "Meta – Other",
   "Not paid (organic / referral)",
   "Not from an intro (existing clients / upsells)",
+  "Source not recorded",
 ];

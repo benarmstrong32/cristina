@@ -1,5 +1,5 @@
 import {
-  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, MONTHLY_AD_BUDGET, SALES_GOALS, DEFAULT_SALES_GOAL, START,
+  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, MONTHLY_AD_BUDGET, SALES_GOALS, DEFAULT_SALES_GOAL, SHEET_START, START,
   channelForCampaign, isMeta,
 } from "@/config/scorecard";
 import type { AdRow, Data, Intro, Triage, Win } from "./types";
@@ -151,7 +151,7 @@ export function goals(d: Data) {
   };
 }
 
-/** Best results since Sept 1, in the spirit of the New Velocity highlights. */
+/** Best results since the ads started, in the spirit of the New Velocity highlights. */
 export function highlights(d: Data) {
   const ads = d.adTotals.filter((a) => a.spend > 0);
   const topAd = [...ads].sort((a, b) => b.applications - a.applications || a.spend - b.spend)[0];
@@ -181,7 +181,7 @@ export function highlights(d: Data) {
   };
 }
 
-/** Since Sept 1, one row per channel plus All Meta and All sources. */
+/** One row per channel plus All Meta and All sources, for the months in the window. */
 export function byChannel(d: Data, p: Period) {
   const w = windowFor(d, p);
   const inMonths = (m: string) => w.months.includes(m);
@@ -220,7 +220,7 @@ export function months(d: Data) {
 
 /** Intros booked vs completed each month, with Cristina's bonus. */
 export function bonus(d: Data) {
-  const ms = [...new Set([...d.intros.map((r) => r.month), ...d.wins.map((w) => w.close_month)])].filter((m) => m <= d.adsThrough.slice(0, 7)).sort();
+  const ms = [...new Set([...d.intros.map((r) => r.month), ...d.wins.map((w) => w.close_month)])].filter((m) => m >= SHEET_START && m <= d.adsThrough.slice(0, 7)).sort();
   return ms.map((m) => {
     const st = introStats(d.intros.filter((r) => r.month === m));
     const goal = INTRO_GOALS[m] ?? DEFAULT_INTRO_GOAL;

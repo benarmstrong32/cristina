@@ -61,6 +61,7 @@ export type Applicant = {
   website?: string;
   createdAt: string;
   status: "submitted" | "partial";
+  funnel?: string;
   stage?: string;
   tags?: string[];
   source?: string;
