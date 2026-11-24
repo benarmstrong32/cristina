@@ -135,11 +135,18 @@ export function goals(d: Data) {
   const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
   const monthSpend = sum(d.ads.filter((r) => r.day.startsWith(m)), (r) => r.spend);
   const perDay = day ? monthSpend / day : 0;
+  // Pace from the last 7 days, so a budget change mid-month shows up in the projection.
+  const last7Since = addDays(d.adsThrough, -6);
+  const last7 = sum(d.ads.filter((r) => r.day >= last7Since && r.day <= d.adsThrough), (r) => r.spend) / 7;
+  const daysLeft = daysInMonth - day;
   return {
     month: m,
     monthSpend,
     perDay,
     projected: perDay * daysInMonth,
+    last7,
+    daysLeft,
+    onTrack: monthSpend + last7 * daysLeft,
     daysInMonth,
     day,
     budget: MONTHLY_AD_BUDGET,

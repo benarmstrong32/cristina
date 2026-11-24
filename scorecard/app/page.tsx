@@ -73,12 +73,18 @@ function Overview({ d, period }: { d: Data; period: Period }) {
       </div>
 
       <h2 className="section">This month <span className="sub">{monthLabel(g.month)} 1 – {g.daysInMonth} · doesn't change with the date range</span></h2>
-      <div className="grid kpis">
+      <div className="grid kpis four">
         <div className="card kpi tone-spend">
           <div className="label">Ad spend this month</div>
           <div className="value tnum">{usd(g.monthSpend)}{g.budget ? <span style={{ fontSize: 16, color: "var(--text-3)", fontWeight: 500 }}> / {usd(g.budget)}</span> : null}</div>
-          <div className="hint">Meta, {monthLabel(g.month)} 1 – {g.day} · {usd(g.perDay)} a day · on pace for {usd(g.projected)} by the {g.daysInMonth}th{g.budget ? ` · ${usd(Math.max(0, g.budget - g.monthSpend))} left` : ""}</div>
+          <div className="hint">Meta, {monthLabel(g.month)} 1 – {g.day} · {usd(g.perDay)} a day on average{g.budget ? ` · ${usd(Math.max(0, g.budget - g.monthSpend))} of budget left` : ""}</div>
           {g.budget ? <div className="goal-track"><div className={`goal-bar${g.projected > g.budget ? " over" : ""}`} style={{ width: `${Math.min(100, (g.monthSpend / g.budget) * 100)}%` }} /></div> : null}
+        </div>
+        <div className="card kpi tone-spend">
+          <div className="label">On track to spend by the {g.daysInMonth}th</div>
+          <div className="value tnum">{usd(g.onTrack)}{g.budget ? <span style={{ fontSize: 16, color: "var(--text-3)", fontWeight: 500 }}> / {usd(g.budget)}</span> : null}</div>
+          <div className="hint">{usd(g.monthSpend)} so far + {usd(g.last7)} a day (last 7 days' pace) × {g.daysLeft} day{g.daysLeft === 1 ? "" : "s"} left</div>
+          {g.budget ? <div className="goal-track"><div className={`goal-bar${g.onTrack > g.budget ? " over" : ""}`} style={{ width: `${Math.min(100, (g.onTrack / g.budget) * 100)}%` }} /></div> : null}
         </div>
         <div className="card kpi">
           <div className="label">Completed intros</div>
