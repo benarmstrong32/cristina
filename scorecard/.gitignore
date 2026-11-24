@@ -1,0 +1,9 @@
+node_modules
+.next
+.env*.local
+.env
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+# Sales data (client names, deal values) is deployed with the app but never committed.
+data/
