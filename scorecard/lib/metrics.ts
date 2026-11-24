@@ -1,5 +1,5 @@
 import {
-  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, MONTHLY_AD_BUDGET, SALES_GOAL_MONTHLY, START,
+  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, MONTHLY_AD_BUDGET, SALES_GOALS, DEFAULT_SALES_GOAL, START,
   channelForCampaign, isMeta,
 } from "@/config/scorecard";
 import type { AdRow, Data, Intro, Triage, Win } from "./types";
@@ -144,7 +144,7 @@ export function goals(d: Data) {
     budget: MONTHLY_AD_BUDGET,
     introGoal: INTRO_GOALS[m] ?? DEFAULT_INTRO_GOAL,
     completed: st.completed,
-    salesGoal: SALES_GOAL_MONTHLY,
+    salesGoal: SALES_GOALS[m] ?? DEFAULT_SALES_GOAL,
     wonMonthly: monthlyValue(won),
     wonTotal: revenue(won),
     deals: won.length,

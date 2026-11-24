@@ -475,7 +475,7 @@ function How() {
         <dt>Intros</dt><dd>From the Intros Booked tab, all sources unless marked “from Meta”. Logged by month, so they use every month that starts in the chosen range plus the month it ends in.</dd>
         <dt>Deals and revenue</dt><dd>Won deals from the monthly pipeline tabs, counted in the month they closed. Revenue is contract value (monthly value × months). Deals from a Meta intro count toward Meta.</dd>
         <dt>ROAS</dt><dd>Revenue from Meta ÷ Meta spend in the same months.</dd>
-        <dt>Goals</dt><dd>Completed intros against the month's goal (15 in Oct and Nov, 20 otherwise) and new monthly value won against the $30,000 sales goal.</dd>
+        <dt>Goals</dt><dd>Completed intros against the month's goal (15 in Oct and Nov, 20 otherwise) and new monthly value won against the month's sales goal ($25,000 in November).</dd>
         <dt>Cristina's bonus</dt><dd>$100 when completed intros meet the goal, plus $50 per deal closed. Add-ons, change orders and renewals don't count.</dd>
         <dt>Updates</dt><dd>Meta numbers are a saved copy until a Meta token is added; then they refresh every 3 hours. Sheet numbers and the people list update each morning or when a new sheet is sent.</dd>
       </dl>

@@ -7,8 +7,9 @@ export const REFRESH_HOURS = 3;
 export const INTRO_GOALS: Record<string, number> = { "2026-09": 20, "2026-10": 15, "2026-11": 15 };
 export const DEFAULT_INTRO_GOAL = 20;
 
-/** Monthly sales goal: new monthly value won ($/month), from the pipeline tab. */
-export const SALES_GOAL_MONTHLY = 30000;
+/** Monthly sales goal: new monthly value won ($/month). Months not listed use DEFAULT_SALES_GOAL. */
+export const SALES_GOALS: Record<string, number> = { "2026-11": 25000 };
+export const DEFAULT_SALES_GOAL = 30000;
 
 /** Monthly Meta ad budget for tracking. Set a number (e.g. 5000) to show spend against it; null shows spend and pace only. */
 export const MONTHLY_AD_BUDGET: number | null = null;
