@@ -1,5 +1,5 @@
 import {
-  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, SALES_GOAL_MONTHLY, START,
+  BONUS_GOAL, BONUS_PER_DEAL, CHANNEL_ORDER, DEFAULT_INTRO_GOAL, INTRO_GOALS, MONTHLY_AD_BUDGET, SALES_GOAL_MONTHLY, START,
   channelForCampaign, isMeta,
 } from "@/config/scorecard";
 import type { AdRow, Data, Intro, Triage, Win } from "./types";
@@ -129,8 +129,19 @@ export function goals(d: Data) {
   const m = d.adsThrough.slice(0, 7);
   const st = introStats(d.intros.filter((r) => r.month === m));
   const won = d.wins.filter((w) => w.close_month === m);
+  const day = Number(d.adsThrough.slice(8, 10));
+  const [y, mo] = m.split("-").map(Number);
+  const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const monthSpend = sum(d.ads.filter((r) => r.day.startsWith(m)), (r) => r.spend);
+  const perDay = day ? monthSpend / day : 0;
   return {
     month: m,
+    monthSpend,
+    perDay,
+    projected: perDay * daysInMonth,
+    daysInMonth,
+    day,
+    budget: MONTHLY_AD_BUDGET,
     introGoal: INTRO_GOALS[m] ?? DEFAULT_INTRO_GOAL,
     completed: st.completed,
     salesGoal: SALES_GOAL_MONTHLY,

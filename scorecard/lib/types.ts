@@ -69,9 +69,12 @@ export type Applicant = {
   calls?: { date: string; title: string; status: string }[];
   ghlUrl?: string;
   disqualified?: boolean;
+  triage?: { date: string; state: "completed" | "no-show" | "cancelled" | "upcoming" | "booked"; bookedIntro: string } | null;
   superQualified?: boolean;
   why?: string;
 };
+
+export type Creative = { format?: string; image?: string; headline?: string; body?: string; about?: string; adset?: string };
 
 export type Data = {
   ads: AdRow[];
@@ -83,6 +86,7 @@ export type Data = {
   triage: Triage[];
   adTotals: AdTotal[];
   adTotalsThrough: string;
+  creatives: Record<string, Creative>;
   applicants: Applicant[];
   applicantsSavedAt?: string;
   sheetSavedAt: string;

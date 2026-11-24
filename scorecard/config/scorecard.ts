@@ -10,6 +10,9 @@ export const DEFAULT_INTRO_GOAL = 20;
 /** Monthly sales goal: new monthly value won ($/month), from the pipeline tab. */
 export const SALES_GOAL_MONTHLY = 30000;
 
+/** Monthly Meta ad budget for tracking. Set a number (e.g. 5000) to show spend against it; null shows spend and pace only. */
+export const MONTHLY_AD_BUDGET: number | null = null;
+
 /** Cristina's bonus: $100 for meeting the completed-intro goal, plus $50 per qualifying deal closed. */
 export const BONUS_GOAL = 100;
 export const BONUS_PER_DEAL = 50;

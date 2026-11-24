@@ -425,3 +425,17 @@ details.person > summary::-webkit-details-marker { display: none; }
 .person[open] .person-row { padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
 .answers dd { white-space: pre-line; }
 @media (max-width: 760px) { .person-row { grid-template-columns: 18px 1fr auto; } .person-row .pco, .person-row .pstage, .person-row .pdate { display: none; } }
+
+.pstage { display: grid; gap: 2px; font-size: 13px; }
+.pstage .stage-sub { color: var(--text-3); font-size: 12px; }
+.tri { font-weight: 500; }
+.tri.good { color: var(--good); }
+.tri.warn { color: var(--warning); }
+.tri.bad { color: var(--critical); }
+.tri.none { color: var(--text-3); }
+.person-row { grid-template-columns: 18px minmax(140px, 1.1fr) minmax(140px, 1.2fr) 70px 110px minmax(200px, 1.6fr); }
+
+.ad-about { margin: 2px 0; font-size: 14px; color: var(--text); max-width: 75ch; }
+.ad-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--text-2); }
+.ad-stats b { color: var(--text); }
+.goal-bar.over { background: var(--warning); }

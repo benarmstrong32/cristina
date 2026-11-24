@@ -9,6 +9,7 @@ import { num, pct, ratio, shortDate, usd } from "@/lib/format";
 import { Controls, Freshness, Funnel, Kpi, TABS, TopBar, type TabKey } from "@/components/ui";
 import { BarChart } from "@/components/BarChart";
 import { MonthBars } from "@/components/MonthBars";
+import { AdPreview } from "@/components/AdPreview";
 import { BONUS_GOAL, BONUS_PER_DEAL } from "@/config/scorecard";
 import type { Applicant, Data } from "@/lib/types";
 
@@ -70,8 +71,14 @@ function Overview({ d, period }: { d: Data; period: Period }) {
         <Kpi tone="cost" label="Cost per completed intro" value={usd(o.costPerCompleted)} hint={`Meta CAC ${usd(o.cac)} per deal`} />
       </div>
 
-      <h2 className="section">Goals this month <span className="sub">{monthLabel(g.month)}</span></h2>
-      <div className="grid two">
+      <h2 className="section">This month <span className="sub">{monthLabel(g.month)} 1 – {g.daysInMonth} · doesn't change with the date range</span></h2>
+      <div className="grid kpis">
+        <div className="card kpi tone-spend">
+          <div className="label">Ad spend this month</div>
+          <div className="value tnum">{usd(g.monthSpend)}{g.budget ? <span style={{ fontSize: 16, color: "var(--text-3)", fontWeight: 500 }}> / {usd(g.budget)}</span> : null}</div>
+          <div className="hint">Meta, {monthLabel(g.month)} 1 – {g.day} · {usd(g.perDay)} a day · on pace for {usd(g.projected)} by the {g.daysInMonth}th{g.budget ? ` · ${usd(Math.max(0, g.budget - g.monthSpend))} left` : ""}</div>
+          {g.budget ? <div className="goal-track"><div className={`goal-bar${g.projected > g.budget ? " over" : ""}`} style={{ width: `${Math.min(100, (g.monthSpend / g.budget) * 100)}%` }} /></div> : null}
+        </div>
         <div className="card kpi">
           <div className="label">Completed intros</div>
           <div className="value tnum">{g.completed} / {g.introGoal}</div>
@@ -201,7 +208,10 @@ function People({ d, period }: { d: Data; period: Period }) {
               <span className="pco">{a.company || "—"}</span>
               <span className="pdate">{shortDate(a.createdAt)}</span>
               <span><span className={`pill ${a.status === "submitted" ? (a.disqualified ? "bad" : "good") : "warn"}`}>{a.status === "submitted" ? (a.disqualified ? "Disqualified" : "Submitted") : "Partial"}</span></span>
-              <span className="pstage">{a.stage && a.stage !== "Disqualified by the form" ? a.stage : ""}</span>
+              <span className="pstage">
+                {a.disqualified || a.triage ? <TriageNote a={a} /> : null}
+                {a.stage && a.stage !== "Disqualified by the form" ? <span className="stage-sub">{a.stage}</span> : null}
+              </span>
             </summary>
             {a.superQualified ? <div className="why">★ {a.why}</div> : null}
             <dl className="answers">
@@ -220,6 +230,20 @@ function People({ d, period }: { d: Data; period: Period }) {
       </div>
     </>
   );
+}
+
+function TriageNote({ a }: { a: Applicant }) {
+  const t = a.triage;
+  if (!t) return <span className="tri none">No triage call booked</span>;
+  const label = {
+    completed: `Triage call ${shortDate(t.date)} · completed${t.bookedIntro.toLowerCase() === "yes" ? " · booked intro" : t.bookedIntro.toLowerCase() === "no" ? " · no intro" : ""}`,
+    "no-show": `Triage call ${shortDate(t.date)} · no-show`,
+    cancelled: `Triage call ${shortDate(t.date)} · cancelled`,
+    upcoming: `Triage call booked for ${shortDate(t.date)}`,
+    booked: `Triage call ${shortDate(t.date)} · not logged in the sheet`,
+  }[t.state];
+  const tone = t.state === "completed" ? "good" : t.state === "upcoming" || t.state === "booked" ? "warn" : "bad";
+  return <span className={`tri ${tone}`}>{label}</span>;
 }
 
 const adName = (d: Data, id: string) => d.adTotals.find((x) => x.id === id)?.name ?? `Ad ${id}`;
@@ -243,20 +267,18 @@ function WhichAd({ d, period }: { d: Data; period: Period }) {
         {sorted.map(([id, people]) => {
           const ad = names.get(id);
           return (
-            <div className="card" key={id}>
-              <div className="ad-title">{ad?.name ?? `Ad ${id}`}</div>
-              <div className="ad-meta">{people.length} {people.length === 1 ? "person" : "people"}{ad ? ` · ${usd(ad.spend)} spent · ${ad.applications} applications per Meta` : ""}</div>
-              <div className="ad-links"><a href={`https://adsmanager.facebook.com/adsmanager/manage/ads?act=1890396841064251&selected_ad_ids=${id}`} target="_blank" rel="noreferrer">Open in Meta Ads Manager ↗</a></div>
+            <AdPreview key={id} ad={ad} c={d.creatives[id]}>
+              <div className="ad-meta" style={{ marginTop: 6 }}><b>{people.length} {people.length === 1 ? "person" : "people"}</b> from GoHighLevel clicked this ad · {people.filter((x) => x.status === "submitted").length} applied · {people.filter((x) => x.superQualified).length} ★</div>
               <table className="ad-people"><tbody>
                 {people.map((p) => (
                   <tr key={p.contactId}>
                     <td><strong>{p.superQualified ? "★ " : ""}{p.name || "No name given"}</strong>{p.company ? <span style={{ color: "var(--text-3)" }}> · {p.company}</span> : null}</td>
-                    <td className="muted">{p.status === "submitted" ? "Applied" : "Started, did not finish"}{p.stage ? ` · ${p.stage}` : ""}</td>
+                    <td className="muted">{p.status === "submitted" ? (p.disqualified ? "Applied · disqualified" : "Applied") : "Started, did not finish"}{p.stage && p.stage !== "Disqualified by the form" ? ` · ${p.stage}` : ""}</td>
                     <td className="r">{p.ghlUrl ? <a href={p.ghlUrl} target="_blank" rel="noreferrer">Open in GHL ↗</a> : null}</td>
                   </tr>
                 ))}
               </tbody></table>
-            </div>
+            </AdPreview>
           );
         })}
       </div>
@@ -273,7 +295,12 @@ function Ads({ d, period }: { d: Data; period: Period }) {
   return (
     <>
       <h2 className="section">Active ads <span className="sub">ads running now, with results since Sept 1 (not affected by the date range)</span></h2>
-      <div className="card table-wrap">
+      <div className="ads-by-lead">
+        {active.map((a) => <AdPreview key={a.id} ad={a} c={d.creatives[a.id]} />)}
+      </div>
+      <details className="card expand" style={{ marginTop: 12 }}>
+        <summary>Active ads as a table</summary>
+      <div className="table-wrap">
         <table>
           <thead><tr><th>Ad</th><th>Status</th><th className="r">Spend</th><th className="r">Impr.</th><th className="r">CTR</th><th className="r">Cost per click</th><th className="r">Applications</th><th className="r">Per application</th></tr></thead>
           <tbody>{active.map((a) => (
@@ -281,6 +308,7 @@ function Ads({ d, period }: { d: Data; period: Period }) {
           ))}</tbody>
         </table>
       </div>
+      </details>
       <h2 className="section">Campaigns <span className="sub">{shortDate(o.since)} – {shortDate(o.until)}</span></h2>
       <div className="card table-wrap">
         <table>

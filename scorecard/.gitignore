@@ -7,3 +7,4 @@ next-env.d.ts
 .vercel
 # Sales data (client names, deal values) is deployed with the app but never committed.
 data/
+public/ads/
