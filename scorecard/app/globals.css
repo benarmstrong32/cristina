@@ -578,3 +578,5 @@ h2.section::before { width: 14px; height: 6px; border-radius: 1px; background: v
 .tg.on { cursor: default; color: #fff; }
 .tg.on.yes { background: var(--good); }
 .tg.on.no { background: var(--text-3); }
+.won-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: var(--good); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; vertical-align: 1px; white-space: nowrap; }
+.won-mark { color: var(--good); font-weight: 700; }

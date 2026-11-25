@@ -56,6 +56,7 @@ export async function getData(): Promise<Data> {
   const sheet = await readJson("sheet.json");
   const adFile = await readJson("meta-ads.json").catch(() => ({ ads: [], through: "" }));
   const people = await readJson("applicants.json").catch(() => ({ people: [], savedAt: undefined }));
+  const wonContacts = ((await readJson("won-contacts.json").catch(() => ({}))).emails ?? {}) as Record<string, string>;
   const creatives = (await readJson("ad-creatives.json").catch(() => ({}))) as Record<string, Creative>;
   const [introsStore, triageStore, bonusStore] = await Promise.all([readCollection<Intro>("intros"), readCollection<Triage>("triage"), readCollection<BonusFlag>("bonus")]);
   const flags = new Map(bonusStore.rows.map((f) => [f.id, f.counts]));
@@ -67,6 +68,7 @@ export async function getData(): Promise<Data> {
     adDaily,
     adWindows,
     applicants: people.people as Applicant[],
+    wonContacts,
     applicantsSavedAt: people.savedAt as string | undefined,
     intros: introsStore.rows,
     wins: (sheet.wins as Win[]).map((w) => {

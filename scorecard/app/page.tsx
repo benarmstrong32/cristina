@@ -26,7 +26,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   const period = parsePeriod(sp);
   const view: TabKey = (TABS.find((t) => t.key === sp.view)?.key ?? "overview") as TabKey;
   const d = await getData();
-  const deals = view === "pipeline" ? await readCollection<Deal>("deals") : null;
+  const deals = view === "pipeline" || view === "which-ad" ? await readCollection<Deal>("deals") : null;
   const o = overview(d, period);
   const back = `/?${new URLSearchParams({ view, ...(sp.range ? { range: sp.range } : {}), ...(sp.from ? { from: sp.from } : {}), ...(sp.to ? { to: sp.to } : {}) })}`;
 
@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       {view === "overview" && <Overview d={d} period={period} />}
       {view === "funnel" && <FunnelTab d={d} period={period} />}
       {view === "people" && <People d={d} period={period} />}
-      {view === "which-ad" && <WhichAd d={d} period={period} />}
+      {view === "which-ad" && <WhichAd d={d} period={period} deals={deals?.rows ?? []} />}
       {view === "ads" && <Ads d={d} period={period} />}
       {view === "intros" && <Intros d={d} />}
       {view === "triage" && <TriageTab d={d} period={period} back={back} />}
@@ -267,7 +267,35 @@ function funnelSplit(xs: Applicant[]) {
 
 const adName = (d: Data, id: string) => d.adTotals.find((x) => x.id === id)?.name ?? `Ad ${id}`;
 
-function WhichAd({ d, period }: { d: Data; period: Period }) {
+const FREE_MAIL = new Set(["gmail", "yahoo", "hotmail", "outlook", "icloud", "aol", "msn", "live", "me", "comcast"]);
+/** The won deal an applicant became, if any: by email first, then company name, then email domain. */
+function wonDealFinder(d: Data, deals: Deal[]) {
+  const emails = new Map<string, string>(Object.entries(d.wonContacts).map(([e, c]) => [e.toLowerCase(), c]));
+  const wonDeals = deals.filter((x) => x.status === "Won");
+  for (const x of wonDeals) for (const e of x.email.toLowerCase().split(/[\s/,;]+/)) if (e.includes("@")) emails.set(e, x.company);
+  const names = [...new Set([...d.wins.map((w) => w.company), ...d.intros.filter((r) => yes(r.won)).map((r) => r.company), ...wonDeals.map((x) => x.company)])]
+    .map((c) => ({ c, n: norm(c) })).filter((x) => x.n.length >= 5);
+  return (p: Applicant): string | null => {
+    const e = (p.email || "").toLowerCase().trim();
+    if (emails.has(e)) return emails.get(e)!;
+    if (/\bwon\b/i.test(p.stage ?? "")) return p.company || "marked won in GoHighLevel";
+    for (const f of [p.company, p.name]) {
+      const n = norm(f || "");
+      const hit = n.length >= 5 && names.find((x) => n.includes(x.n));
+      if (hit) return hit.c;
+    }
+    const dom = e.split("@")[1]?.split(".")[0] ?? "";
+    if (dom && !FREE_MAIL.has(dom)) {
+      const n = norm(dom);
+      const hit = n.length >= 5 && names.find((x) => x.n === n || n.includes(x.n) || x.n.includes(n));
+      if (hit) return hit.c;
+    }
+    return null;
+  };
+}
+
+function WhichAd({ d, period, deals }: { d: Data; period: Period; deals: Deal[] }) {
+  const wonAs = wonDealFinder(d, deals);
   const o = overview(d, period);
   const ps = d.applicants.filter((a) => inWindow(a, o.since, o.until));
   const names = new Map(d.adTotals.map((a) => [a.id, a]));
@@ -288,11 +316,11 @@ function WhichAd({ d, period }: { d: Data; period: Period }) {
           const ad = names.get(id);
           return (
             <AdPreview key={id} ad={ad ?? (id.startsWith("name:") ? { id: "", name: id.slice(5), status: "", spend: 0, impressions: 0, clicks: 0, applications: 0 } : undefined)} c={d.creatives[id]}>
-              <div className="ad-meta" style={{ marginTop: 6 }}><b>{people.length} {people.length === 1 ? "person" : "people"}</b> from GoHighLevel clicked this ad · {people.filter((x) => x.status === "submitted").length} applied · {people.filter((x) => x.superQualified).length} ★</div>
+              <div className="ad-meta" style={{ marginTop: 6 }}><b>{people.length} {people.length === 1 ? "person" : "people"}</b> from GoHighLevel clicked this ad · {people.filter((x) => x.status === "submitted").length} applied · {people.filter((x) => x.superQualified).length} ★{people.some((x) => wonAs(x)) ? <> · <span className="won-mark">✓ {people.filter((x) => wonAs(x)).length} won</span></> : null}</div>
               <table className="ad-people"><tbody>
                 {people.map((p) => (
                   <tr key={p.contactId}>
-                    <td><strong>{p.superQualified ? "★ " : ""}{p.name || "No name given"}</strong>{p.company ? <span style={{ color: "var(--text-3)" }}> · {p.company}</span> : null}</td>
+                    <td><strong>{p.superQualified ? "★ " : ""}{p.name || "No name given"}</strong>{p.company ? <span style={{ color: "var(--text-3)" }}> · {p.company}</span> : null}{(() => { const w = wonAs(p); return w ? <span className="won-badge" title={`Won deal: ${w}`}>✓ WON</span> : null; })()}</td>
                     <td className="muted">{p.status === "submitted" ? (p.disqualified ? "Applied · disqualified" : "Applied") : "Started, did not finish"}{p.stage && p.stage !== "Disqualified by the form" ? ` · ${p.stage}` : ""}</td>
                     <td className="r">{p.ghlUrl ? <a href={p.ghlUrl} target="_blank" rel="noreferrer">Open in GHL ↗</a> : null}</td>
                   </tr>

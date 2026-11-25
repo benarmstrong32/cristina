@@ -103,6 +103,7 @@ export type Data = {
   adTotalsThrough: string;
   creatives: Record<string, Creative>;
   applicants: Applicant[];
+  wonContacts: Record<string, string>;
   applicantsSavedAt?: string;
   sheetSavedAt: string;
   generatedAt: string;
