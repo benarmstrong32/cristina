@@ -580,3 +580,67 @@ h2.section::before { width: 14px; height: 6px; border-radius: 1px; background: v
 .tg.on.no { background: var(--text-3); }
 .won-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: var(--good); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; vertical-align: 1px; white-space: nowrap; }
 .won-mark { color: var(--good); font-weight: 700; }
+.deal-row { grid-template-columns: 30px minmax(150px, 1.4fr) 120px 56px 70px 130px minmax(170px, 1.8fr); }
+.star-cell { display: flex; justify-content: center; }
+.deal-star { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 50%; background: transparent; color: var(--text-3); font-size: 17px; line-height: 1; cursor: pointer; padding: 0; }
+.deal-star:hover { color: #c99700; border-color: #c99700; }
+.deal-star.on { background: #c99700; border-color: #c99700; color: #fff; }
+details.person.starred { border-left: 3px solid #c99700; }
+@media (max-width: 760px) { .deal-row { grid-template-columns: 34px 1fr auto; } .deal-row > :nth-child(n+4) { display: none; } .deal-row > .pname { order: 0; } }
+
+/* Dark mode chosen with the toggle (same rules as the device-setting dark mode above) */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --border: #2f2f2c;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --text-3: #8f8e86;
+    --accent: #3987e5;
+    --series-spend: #3987e5;
+    --series-leads: #d95926;
+    --funnel-1: #184f95;
+    --funnel-2: #1c5cab;
+    --funnel-3: #256abf;
+    --funnel-4: #3987e5;
+    --funnel-5: #6da7ec;
+    --warning: #fab219;
+  }
+:root[data-theme="dark"] {
+    --bg: #0a1424; --surface: #111f35; --surface-2: #172a45; --border: #22385a;
+    --text: #eef3fb; --text-2: #b6c3d8; --text-3: #8496b3; --accent: #4ea3ff;
+    --t-spend-bg: #15304f; --t-lead-bg: #0f3443; --t-partial-bg: #3a2c0f; --t-qualified-bg: #10362a;
+    --t-reroute-bg: #3d2215; --t-booked-bg: #251f4a; --t-cost-bg: #1b2a40; --t-pdf-bg: #0f3434; --t-sale-bg: #3a1a30;
+    --t-spend: #5aa2ff; --t-lead: #3fcdf0; --t-partial: #f3b13b; --t-qualified: #3fd18a; --t-reroute: #ff8b57;
+    --t-booked: #9d89ff; --t-cost: #a9b8cf; --t-pdf: #3fd0d0; --t-sale: #f070b9;
+  }
+:root[data-theme="dark"] .ad-title { color: var(--text); }
+:root[data-theme="dark"] .range a[aria-current="true"] { background: var(--accent); }
+:root[data-theme="dark"] .why { background: #2b2410; border-color: #7a6320; }
+:root[data-theme="dark"] {
+    --navy: #0f131d; --navy-2: #0f131d;
+    --bg: #0b0e15; --surface: #141925; --surface-2: #1c2230; --border: #262d3c;
+    --text: #f6f6f5; --text-2: #c4c6cc; --text-3: #8d9099; --accent: #4a9bf0;
+    --t-spend: #4a9bf0; --t-lead: #f6f6f5; --t-partial: #f6f6f5; --t-booked: #4a9bf0; --t-sale: #f6f6f5; --t-cost: #8d9099;
+    --t-spend-bg: var(--surface); --t-lead-bg: var(--surface); --t-partial-bg: var(--surface); --t-qualified-bg: var(--surface);
+    --t-booked-bg: var(--surface); --t-cost-bg: var(--surface); --t-sale-bg: var(--surface);
+  }
+:root[data-theme="dark"] .range a[aria-current="true"], :root[data-theme="dark"] .subtabs a[aria-current="page"], :root[data-theme="dark"] .custom-range > summary[aria-current="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+:root[data-theme="dark"] .why { background: #2a2410; }
+:root[data-theme="dark"] .login-logo { filter: invert(1); }
+
+/* Light / dark toggle and logo swap */
+.logo-on-dark { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo-on-light { display: none; } :root:not([data-theme="light"]) .logo-on-dark { display: inline; } }
+:root[data-theme="dark"] .logo-on-light { display: none; }
+:root[data-theme="dark"] .logo-on-dark { display: inline; }
+.theme-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.theme-toggle form { margin: 0; }
+.theme-toggle button { border: 0; background: transparent; color: var(--text-3); font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px; cursor: pointer; white-space: nowrap; }
+.theme-toggle button:hover { color: var(--text); }
+:root[data-theme="light"] .th-light, :root[data-theme="dark"] .th-dark { background: var(--text); color: var(--bg); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) .th-dark { background: var(--text); color: var(--bg); } }
+@media (prefers-color-scheme: light) { :root:not([data-theme]) .th-light { background: var(--text); color: var(--bg); } }
+.who { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }

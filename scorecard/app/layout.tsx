@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "9miles Growth Scorecard",
@@ -7,9 +8,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const t = (await cookies()).get("theme")?.value;
   return (
-    <html lang="en">
+    <html lang="en" data-theme={t === "light" || t === "dark" ? t : undefined}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

@@ -127,4 +127,6 @@ export type Deal = {
   amountPerMonth: number | null;
   confidence: number | null;
   months: number | null;
+  /** Month (YYYY-MM) we starred it as closing; the star clears itself when the month ends. */
+  starredFor?: string;
 };

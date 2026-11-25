@@ -74,6 +74,11 @@ export async function POST(req: Request) {
   try {
     await writeCollection<Row>(c, session.name, version, (rows) => {
       if (action === "move") return move(rows, id, String(form.get("dir") ?? ""));
+      if (action === "star") {
+        if (!rows.some((r) => r.id === id)) throw new StaleError("That deal was changed or removed. Reload and try again.");
+        const month = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" }).slice(0, 7);
+        return rows.map((r) => (r.id === id ? { ...r, starredFor: r.starredFor === month ? "" : month } : r));
+      }
       if (action === "delete") {
         if (form.get("confirm") !== "yes") throw new Error("Tick “Yes, delete it” to confirm.");
         return rows.filter((r) => r.id !== id);
@@ -84,7 +89,7 @@ export async function POST(req: Request) {
       if (!String(row.company ?? "").trim()) throw new Error("Add a company or prospect name.");
       return prev ? rows.map((r) => (r.id === id ? row : r)) : [row, ...rows];
     });
-    if (action === "move") return to("", true, `d-${id}`);
+    if (action === "move" || action === "star") return to("", true, `d-${id}`);
     return to(action === "delete" ? "Deleted." : "Saved.", true);
   } catch (e) {
     return to((e as Error).message, false);

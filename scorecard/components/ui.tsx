@@ -5,17 +5,24 @@ import { RANGES, periodQuery, type Period } from "@/lib/metrics";
 import { dateTime, shortDate } from "@/lib/format";
 import { START } from "@/config/scorecard";
 
-export function TopBar({ session }: { session: Session }) {
+export function TopBar({ session, back = "/" }: { session: Session; back?: string }) {
   return (
     <header className="topbar">
       <div className="brand">
-        <picture>
-          <source srcSet="/brand/logo-white.png" media="(prefers-color-scheme: dark)" />
-          <img className="brand-logo" src="/brand/logo-black.png" alt="9miles Media" width={186} height={40} />
-        </picture>
+        <img className="brand-logo logo-on-light" src="/brand/logo-black.png" alt="9miles Media" width={186} height={40} />
+        <img className="brand-logo logo-on-dark" src="/brand/logo-white.png" alt="9miles Media" width={186} height={40} />
         <span className="brand-sub">Growth Scorecard</span>
       </div>
       <div className="who">
+        <div className="theme-toggle" role="group" aria-label="Light or dark mode">
+          {([["light", "☀ Light"], ["dark", "☾ Dark"]] as const).map(([v, label]) => (
+            <form method="post" action="/api/theme" key={v}>
+              <input type="hidden" name="theme" value={v} />
+              <input type="hidden" name="back" value={back} />
+              <button type="submit" className={`th-${v}`}>{label}</button>
+            </form>
+          ))}
+        </div>
         <span>{session.name}</span>
         <form method="post" action="/api/logout">
           <button className="btn-link" type="submit">Sign out</button>

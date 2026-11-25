@@ -19,9 +19,14 @@ const GROUPS: { title: string; sub: string; pick: (x: Deal) => boolean }[] = [
 
 function Row({ x, version, back, now }: { x: Deal; version: number; back: string; now: string }) {
   const overdue = x.status === "Active" && x.nextAction && x.nextAction < now;
+  const starred = x.starredFor === now.slice(0, 7);
+  const label = starred ? "Starred to close this month. Click to unstar" : "Star: we think this closes this month";
   return (
-    <details className="card person">
+    <details className={`card person${starred ? " starred" : ""}`}>
       <summary className="rec-row deal-row">
+        <span className="star-cell">
+          <button type="submit" form={`star-${x.id}`} className={`deal-star${starred ? " on" : ""}`} title={label} aria-label={label} aria-pressed={starred}>{starred ? "★" : "☆"}</button>
+        </span>
         <span className="pname">{x.company}<span className="pfunnel">{[x.dealType, x.leadSource].filter(Boolean).join(" · ")}</span></span>
         <span className="tnum">{x.amountPerMonth ? `${usd(x.amountPerMonth)}/mo` : "—"}{x.months ? <span className="pfunnel">{x.months} mo · {usd(total(x))}</span> : null}</span>
         <span className="tnum">{x.confidence != null ? `${Math.round(x.confidence * 100)}%` : "—"}</span>
@@ -31,6 +36,19 @@ function Row({ x, version, back, now }: { x: Deal; version: number; back: string
       </summary>
       <RecordForm kind="deals" row={x as unknown as Record<string, unknown>} version={version} back={back} />
     </details>
+  );
+}
+
+/** The star button sits in the row; this hidden form outside the row is what it submits. */
+function StarForm({ id, version, back }: { id: string; version: number; back: string }) {
+  return (
+    <form id={`star-${id}`} method="post" action="/api/records" hidden>
+      <input type="hidden" name="collection" value="deals" />
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="version" value={version} />
+      <input type="hidden" name="back" value={back} />
+      <input type="hidden" name="action" value="star" />
+    </form>
   );
 }
 
@@ -64,16 +82,17 @@ export function Pipeline({ deals, back }: { deals: Stored<Deal> | null; back: st
   const mrr = active.reduce((s, x) => s + (x.amountPerMonth ?? 0), 0);
   const weighted = active.reduce((s, x) => s + (x.amountPerMonth ?? 0) * (x.confidence ?? 0), 0);
   const overdue = active.filter((x) => x.nextAction && x.nextAction < now).length;
+  const starred = deals.rows.filter((x) => x.starredFor === thisMonth && x.status !== "Lost");
   const closingNow = active.filter((x) => x.closeMonth.toLowerCase().startsWith(monthName.toLowerCase()));
   const hot = active.filter((x) => (x.confidence ?? 0) >= 0.7);
   return (
     <>
-      <h2 className="section">Pipeline <span className="sub">every deal in play · ⤒ ▲ ▼ to put the hottest on top · click a deal to update it</span></h2>
+      <h2 className="section">Pipeline <span className="sub">every deal in play · ☆ star the ones closing this month · ⤒ ▲ ▼ to put the hottest on top · click a deal to update it</span></h2>
       <div className="grid kpis five">
         <Kpi tone="lead" label="Active deals" value={String(active.length)} hint={`${hot.length} at 70%+ confidence`} />
         <Kpi tone="sale" label="Active pipeline" value={`${usd(mrr)}/mo`} hint="Sum of monthly amounts" />
         <Kpi tone="qualified" label="Weighted pipeline" value={`${usd(weighted)}/mo`} hint="Monthly amount × confidence" />
-        <Kpi tone="booked" label={`Expected to close in ${monthName}`} value={String(closingNow.length)} hint={closingNow.length ? `${usd(closingNow.reduce((s, x) => s + (x.amountPerMonth ?? 0), 0))}/mo` : undefined} />
+        <Kpi tone="booked" label={`★ Closing in ${monthName}`} value={String(starred.length)} hint={starred.length ? `${usd(starred.reduce((s, x) => s + (x.amountPerMonth ?? 0), 0))}/mo · ${usd(starred.reduce((s, x) => s + total(x), 0))} total` : `Star a deal to count it here · ${closingNow.length} list ${monthName}. as close month`} />
         <Kpi tone="cost" label="Overdue next actions" value={String(overdue)} hint={overdue ? "Next action date has passed" : "All caught up"} />
       </div>
       <details className="card expand add-card">
@@ -87,11 +106,12 @@ export function Pipeline({ deals, back }: { deals: Stored<Deal> | null; back: st
         return (
           <section key={g.title}>
             <h3 className="group-h">{g.title} <span className="sub">{rows.length} deal{rows.length === 1 ? "" : "s"} · {usd(sum)}/mo · {g.sub}</span></h3>
-            <div className="deal-head rec-row deal-row with-mover" aria-hidden><span>Deal</span><span>Amount</span><span>Conf.</span><span>Close</span><span>Next action</span><span>Next steps</span></div>
+            <div className="deal-head rec-row deal-row with-mover" aria-hidden><span title="Starred to close this month">★</span><span>Deal</span><span>Amount</span><span>Conf.</span><span>Close</span><span>Next action</span><span>Next steps</span></div>
             <div className="people-list">
               {rows.map((x, i) => (
                 <div className="deal-item" id={`d-${x.id}`} key={x.id}>
                   <Mover id={x.id} version={deals.version} back={back} first={i === 0} last={i === rows.length - 1} />
+                  <StarForm id={x.id} version={deals.version} back={back} />
                   <Row x={x} version={deals.version} back={back} now={now} />
                 </div>
               ))}

@@ -32,7 +32,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
 
   return (
     <main className="shell">
-      <TopBar session={session} />
+      <TopBar session={session} back={back} />
       <Controls period={period} view={view} />
       <SaveNotice saved={sp.saved} error={sp.error} />
       <Freshness d={d} back={back} />
