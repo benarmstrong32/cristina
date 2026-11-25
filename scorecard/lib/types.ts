@@ -12,6 +12,7 @@ export type AdRow = {
 export type Intro = {
   id?: string;
   notes?: string;
+  triaged?: string;
   month: string;
   company: string;
   completed: string;
@@ -32,7 +33,11 @@ export type Win = {
   months: number | null;
   contract_value: number | null;
   counts_for_bonus: boolean;
+  bonus_key?: string;
+  bonus_edited?: boolean;
 };
+
+export type BonusFlag = { id: string; counts: string };
 
 export type Triage = {
   id?: string;
@@ -83,7 +88,7 @@ export type AdDay = { day: string; id: string; spend: number; impressions: numbe
 export type Creative = { format?: string; image?: string; headline?: string; body?: string; about?: string; adset?: string };
 
 export type Data = {
-  versions: { intros: number; triage: number };
+  versions: { intros: number; triage: number; bonus: number };
   liveUpdated: { intros: string; triage: string };
   ads: AdRow[];
   adsThrough: string;

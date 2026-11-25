@@ -48,7 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       {view === "ads" && <Ads d={d} period={period} />}
       {view === "intros" && <Intros d={d} />}
       {view === "triage" && <TriageTab d={d} period={period} back={back} />}
-      {view === "deals" && <Deals d={d} />}
+      {view === "deals" && <Deals d={d} back={back} />}
       {view === "log" && <Log d={d} back={back} />}
       {view === "pipeline" && <Pipeline deals={deals} back={back} />}
       {view === "how" && <How />}
@@ -440,11 +440,31 @@ function TriageTab({ d, period, back }: { d: Data; period: Period; back: string 
   );
 }
 
-function Deals({ d }: { d: Data }) {
+function BonusToggle({ w, version, back }: { w: Data["wins"][number]; version: number; back: string }) {
+  return (
+    <div className="toggle" role="group" aria-label={`Bonus deal for ${w.company}`}>
+      {(["Yes", "No"] as const).map((v) => {
+        const on = (v === "Yes") === w.counts_for_bonus;
+        return (
+          <form method="post" action="/api/records" key={v}>
+            <input type="hidden" name="collection" value="bonus" />
+            <input type="hidden" name="id" value={w.bonus_key} />
+            <input type="hidden" name="counts" value={v} />
+            <input type="hidden" name="version" value={version} />
+            <input type="hidden" name="back" value={back} />
+            <button type="submit" className={`tg${on ? ` on ${v === "Yes" ? "yes" : "no"}` : ""}`} aria-pressed={on} disabled={on}>{v}</button>
+          </form>
+        );
+      })}
+    </div>
+  );
+}
+
+function Deals({ d, back }: { d: Data; back: string }) {
   const ws = [...d.wins].sort((a, b) => (a.close_month < b.close_month ? 1 : a.close_month > b.close_month ? -1 : (b.contract_value ?? 0) - (a.contract_value ?? 0)));
   return (
     <>
-      <h2 className="section">Won deals <span className="sub">every deal closed since the ads started in April, newest first</span></h2>
+      <h2 className="section">Won deals <span className="sub">every deal closed since the ads started in April, newest first · click Yes or No to set whether a deal counts toward Cristina’s bonus</span></h2>
       <div className="card table-wrap">
         <table>
           <thead><tr><th>Closed</th><th>Company</th><th>Channel</th><th>Type</th><th className="r">Per month</th><th className="r">Months</th><th className="r">Contract value</th><th>Bonus deal</th></tr></thead>
@@ -453,7 +473,7 @@ function Deals({ d }: { d: Data }) {
               <tr key={w.close_month + w.company}>
                 <td>{monthLabel(w.close_month)}</td><td>{w.company}</td><td>{w.channel}</td><td>{w.deal_type || "—"}</td>
                 <td className="r tnum">{usd(w.monthly_value)}</td><td className="r tnum">{w.months ?? "—"}</td><td className="r tnum">{usd(w.contract_value)}</td>
-                <td><span className={`pill ${w.counts_for_bonus ? "good" : ""}`}>{w.counts_for_bonus ? "Yes" : "No"}</span></td>
+                <td><BonusToggle w={w} version={d.versions.bonus} back={back} /></td>
               </tr>
             ))}
           </tbody>
@@ -461,6 +481,17 @@ function Deals({ d }: { d: Data }) {
       </div>
     </>
   );
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/&/g, " and ").replace(/\b(the|and|co|llc|inc|company)\b/g, " ").replace(/[^a-z0-9]/g, "");
+/** Whether an intro had a triage call: what was entered on the intro, else a match on the Triage calls tab. */
+function triagedFor(r: Data["intros"][number], d: Data): { v: string; auto: boolean } {
+  if (r.triaged) return { v: r.triaged, auto: false };
+  const n = norm(r.company);
+  const hit = n.length >= 3 && d.triage.some((t) => { const m = norm(t.company); return m.length >= 3 && (m.includes(n) || n.includes(m)); });
+  if (hit) return { v: "Yes", auto: true };
+  const firstLogged = d.triage.map((t) => t.month).filter(Boolean).sort()[0];
+  return { v: firstLogged && r.month >= firstLogged ? "No" : "", auto: true };
 }
 
 function Log({ d, back }: { d: Data; back: string }) {
@@ -473,22 +504,24 @@ function Log({ d, back }: { d: Data; back: string }) {
         <summary>＋ Add an intro</summary>
         <RecordForm kind="intros" version={d.versions.intros} back={back} label="Add intro" />
       </details>
+      <div className="deal-head rec-row intro-row" aria-hidden><span>Month</span><span>Company</span><span>Lead source</span><span>Intro</span><span>Triaged</span><span>Won</span><span>Notes</span></div>
       <div className="people-list">
-        {xs.map((r) => (
+        {xs.map((r) => { const tr = triagedFor(r, d); return (
           <details className="card person" key={r.id ?? r.month + r.company}>
-            <summary className="rec-row">
+            <summary className="rec-row intro-row">
               <span className="pdate">{monthLabel(r.month)}</span>
               <span className="pname">{r.company}</span>
               <span className="pco">{r.lead_source}<span className="pfunnel">{r.ad_channel}</span></span>
               <span><span className={`pill ${tone(r.completed)}`}>{r.completed || "—"}</span></span>
+              <span title={tr.auto && tr.v ? "Filled in from the Triage calls tab" : undefined}>{tr.v === "Yes" ? <span className="pill good">Triaged</span> : tr.v === "No" && !tr.auto ? <span className="pill bad">No triage</span> : <span className="pdate">{tr.v ? "None found" : "Not logged"}</span>}</span>
               <span>{yes(r.won) ? <span className="pill good">Won {usd(r.contract_value)}</span> : null}</span>
               <span className="pco wrapcell">{r.notes}</span>
             </summary>
             <RecordForm kind="intros" row={r as unknown as Record<string, unknown>} version={d.versions.intros} back={back} />
           </details>
-        ))}
+        ); })}
       </div>
-      <p className="note">Saved in the app{d.liveUpdated.intros ? `, last change ${dateTime(d.liveUpdated.intros)} ET` : " (started from the sales ops sheet, Nov 19)"}. Completed intros feed the goal and Cristina's bonus right away.</p>
+      <p className="note">Saved in the app{d.liveUpdated.intros ? `, last change ${dateTime(d.liveUpdated.intros)} ET` : " (started from the sales ops sheet, Nov 19)"}. Completed intros feed the goal and Cristina's bonus right away. Triaged fills in by itself when the company is on the Triage calls tab (logged from Nov); pick Yes or No on the intro to override it, or for earlier months.</p>
     </>
   );
 }

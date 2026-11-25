@@ -3,7 +3,7 @@ import path from "node:path";
 import { unstable_cache } from "next/cache";
 import { AD_ACCOUNT_ID, REFRESH_HOURS, START } from "@/config/scorecard";
 import { readCollection } from "./store";
-import type { AdDay, AdRow, AdTotal, Applicant, Creative, Data, Intro, Triage, Win } from "./types";
+import type { AdDay, AdRow, AdTotal, Applicant, Creative, Data, Intro, Triage, Win, BonusFlag } from "./types";
 
 export const LIVE_TAG = "meta-live";
 
@@ -57,7 +57,8 @@ export async function getData(): Promise<Data> {
   const adFile = await readJson("meta-ads.json").catch(() => ({ ads: [], through: "" }));
   const people = await readJson("applicants.json").catch(() => ({ people: [], savedAt: undefined }));
   const creatives = (await readJson("ad-creatives.json").catch(() => ({}))) as Record<string, Creative>;
-  const [introsStore, triageStore] = await Promise.all([readCollection<Intro>("intros"), readCollection<Triage>("triage")]);
+  const [introsStore, triageStore, bonusStore] = await Promise.all([readCollection<Intro>("intros"), readCollection<Triage>("triage"), readCollection<BonusFlag>("bonus")]);
+  const flags = new Map(bonusStore.rows.map((f) => [f.id, f.counts]));
   const winFile = await readJson("meta-ad-windows.json").catch(() => ({}));
   const adWindows = Object.fromEntries(["7d", "30d"].filter((k) => winFile[k]).map((k) => [k, { ...winFile[k], through: winFile.through }]));
   const adDaily = ((await readJson("meta-ad-daily.json").catch(() => ({ rows: [] }))).rows ?? []) as AdDay[];
@@ -68,9 +69,13 @@ export async function getData(): Promise<Data> {
     applicants: people.people as Applicant[],
     applicantsSavedAt: people.savedAt as string | undefined,
     intros: introsStore.rows,
-    wins: sheet.wins as Win[],
+    wins: (sheet.wins as Win[]).map((w) => {
+      const key = `${w.close_month}|${w.company}`;
+      const f = flags.get(key);
+      return { ...w, bonus_key: key, bonus_edited: f != null, counts_for_bonus: f == null ? w.counts_for_bonus : f === "Yes" };
+    }),
     triage: triageStore.rows,
-    versions: { intros: introsStore.version, triage: triageStore.version },
+    versions: { intros: introsStore.version, triage: triageStore.version, bonus: bonusStore.version },
     liveUpdated: { intros: introsStore.updatedAt, triage: triageStore.updatedAt },
     adTotals: (adFile.ads as (AdTotal & { leads?: number })[]).map((a) => ({ ...a, applications: (a.applications || 0) + (a.leads || 0) })),
     adTotalsThrough: adFile.through as string,

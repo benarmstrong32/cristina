@@ -4,7 +4,7 @@ import { get, put } from "@vercel/blob";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export type Collection = "deals" | "intros" | "triage";
+export type Collection = "deals" | "intros" | "triage" | "bonus";
 export type Stored<T> = { version: number; updatedAt: string; updatedBy: string; rows: T[] };
 
 const file = (c: Collection) => `store/${c}.json`;

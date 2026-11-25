@@ -561,3 +561,20 @@ h2.section::before { width: 14px; height: 6px; border-radius: 1px; background: v
 }
 .grid.kpis.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 @media (max-width: 1000px) { .grid.kpis.five { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.deal-item { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 6px; align-items: start; scroll-margin-top: 80px; }
+.deal-item:target > details { outline: 2px solid var(--gold); outline-offset: 1px; }
+.mover { display: flex; flex-direction: column; gap: 2px; padding-top: 6px; }
+.mover form { margin: 0; }
+.mv { width: 28px; height: 20px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-2); font-size: 11px; line-height: 1; cursor: pointer; }
+.mv:hover:not(:disabled) { border-color: var(--text); color: var(--text); }
+.mv:disabled { opacity: 0.3; cursor: default; }
+.deal-head.with-mover { padding-left: 51px; }
+.intro-row { grid-template-columns: 70px minmax(140px, 1.2fr) minmax(130px, 1.1fr) 100px 100px 120px minmax(140px, 1.4fr); }
+.people-list + .deal-head, .deal-head.intro-row { margin-top: 4px; }
+.toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.toggle form { margin: 0; }
+.tg { border: 0; background: transparent; color: var(--text-3); font: inherit; font-size: 12px; font-weight: 600; padding: 3px 11px; cursor: pointer; }
+.tg:hover:not(:disabled) { color: var(--text); background: var(--surface-2); }
+.tg.on { cursor: default; color: #fff; }
+.tg.on.yes { background: var(--good); }
+.tg.on.no { background: var(--text-3); }

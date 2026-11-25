@@ -21,6 +21,14 @@ export function channelForSource(source: string) {
   return "Not paid (organic / referral)";
 }
 
+/** The Pipeline section a deal sits in. Moving a deal up or down only reorders it within its section. */
+export function dealGroup(x: Record<string, unknown> | { status: string; owner: string }) {
+  const s = String((x as Record<string, unknown>).status ?? "");
+  if (s !== "Active") return s;
+  const o = String((x as Record<string, unknown>).owner ?? "");
+  return `Active:${o === "Cristina" || o === "Dan" ? o : "Ben"}`;
+}
+
 export const DEAL_STATUSES = ["Active", "On Hold", "Long-term", "Won", "Lost"];
 
 export const FIELDS: Record<"deals" | "intros" | "triage", Field[]> = {
@@ -47,6 +55,7 @@ export const FIELDS: Record<"deals" | "intros" | "triage", Field[]> = {
     { key: "completed", label: "Intro completed?", type: "select", options: ["Yes", "No", "Upcoming", "Reschedule in process"] },
     { key: "lead_source", label: "Lead source", type: "select", options: LEAD_SOURCES },
     { key: "ad_channel", label: "Counts toward", type: "select", options: ["Auto (from lead source)", ...AD_CHANNELS], hint: "Leave on Auto unless a deal should count differently" },
+    { key: "triaged", label: "Triaged?", type: "select", options: ["", "Yes", "No"], hint: "Leave blank to fill in from the Triage calls tab" },
     { key: "won", label: "Won?", type: "select", options: ["", "Yes"] },
     { key: "monthly_value", label: "Monthly value ($)", type: "number" },
     { key: "months", label: "# months", type: "number" },

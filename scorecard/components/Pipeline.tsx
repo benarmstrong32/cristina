@@ -34,6 +34,27 @@ function Row({ x, version, back, now }: { x: Deal; version: number; back: string
   );
 }
 
+function Mover({ id, version, back, first, last }: { id: string; version: number; back: string; first: boolean; last: boolean }) {
+  const btn = (dir: string, label: string, title: string, off: boolean) => (
+    <form method="post" action="/api/records">
+      <input type="hidden" name="collection" value="deals" />
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="version" value={version} />
+      <input type="hidden" name="back" value={back} />
+      <input type="hidden" name="action" value="move" />
+      <input type="hidden" name="dir" value={dir} />
+      <button type="submit" className="mv" title={title} aria-label={title} disabled={off}>{label}</button>
+    </form>
+  );
+  return (
+    <div className="mover">
+      {btn("top", "⤒", "Move to the top", first)}
+      {btn("up", "▲", "Move up", first)}
+      {btn("down", "▼", "Move down", last)}
+    </div>
+  );
+}
+
 export function Pipeline({ deals, back }: { deals: Stored<Deal> | null; back: string }) {
   if (!deals) return null;
   const now = today();
@@ -47,7 +68,7 @@ export function Pipeline({ deals, back }: { deals: Stored<Deal> | null; back: st
   const hot = active.filter((x) => (x.confidence ?? 0) >= 0.7);
   return (
     <>
-      <h2 className="section">Pipeline <span className="sub">every deal in play · click a deal to update it · saves for everyone right away</span></h2>
+      <h2 className="section">Pipeline <span className="sub">every deal in play · ⤒ ▲ ▼ to put the hottest on top · click a deal to update it</span></h2>
       <div className="grid kpis five">
         <Kpi tone="lead" label="Active deals" value={String(active.length)} hint={`${hot.length} at 70%+ confidence`} />
         <Kpi tone="sale" label="Active pipeline" value={`${usd(mrr)}/mo`} hint="Sum of monthly amounts" />
@@ -60,15 +81,20 @@ export function Pipeline({ deals, back }: { deals: Stored<Deal> | null; back: st
         <RecordForm kind="deals" version={deals.version} back={back} label="Add deal" />
       </details>
       {GROUPS.map((g) => {
-        const rows = deals.rows.filter(g.pick).sort((a, b) => (a.nextAction || "9999") < (b.nextAction || "9999") ? -1 : 1);
+        const rows = deals.rows.filter(g.pick);
         if (!rows.length) return null;
         const sum = rows.reduce((s, x) => s + (x.amountPerMonth ?? 0), 0);
         return (
           <section key={g.title}>
             <h3 className="group-h">{g.title} <span className="sub">{rows.length} deal{rows.length === 1 ? "" : "s"} · {usd(sum)}/mo · {g.sub}</span></h3>
-            <div className="deal-head rec-row deal-row" aria-hidden><span>Deal</span><span>Amount</span><span>Conf.</span><span>Close</span><span>Next action</span><span>Next steps</span></div>
+            <div className="deal-head rec-row deal-row with-mover" aria-hidden><span>Deal</span><span>Amount</span><span>Conf.</span><span>Close</span><span>Next action</span><span>Next steps</span></div>
             <div className="people-list">
-              {rows.map((x) => <Row key={x.id} x={x} version={deals.version} back={back} now={now} />)}
+              {rows.map((x, i) => (
+                <div className="deal-item" id={`d-${x.id}`} key={x.id}>
+                  <Mover id={x.id} version={deals.version} back={back} first={i === 0} last={i === rows.length - 1} />
+                  <Row x={x} version={deals.version} back={back} now={now} />
+                </div>
+              ))}
             </div>
           </section>
         );
