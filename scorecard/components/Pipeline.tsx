@@ -28,11 +28,26 @@ function Row({ x, version, back, now }: { x: Deal; version: number; back: string
           <button type="submit" form={`star-${x.id}`} className={`deal-star${starred ? " on" : ""}`} title={label} aria-label={label} aria-pressed={starred}>{starred ? "★" : "☆"}</button>
         </span>
         <span className="pname">{x.company}<span className="pfunnel">{[x.dealType, x.leadSource].filter(Boolean).join(" · ")}</span></span>
+        <span className="contact-cell">
+          <span className="cname">{x.contact || "—"}</span>
+          {x.email ? (
+            <span className="cemail">
+              {x.email.split(/\s*[\/,;]\s*|\s+/).filter((e) => e.includes("@")).map((e, i) => (
+                <a key={e} href={`mailto:${e}`}>{i ? <br /> : null}{e}</a>
+              ))}
+            </span>
+          ) : null}
+        </span>
         <span className="tnum">{x.amountPerMonth ? `${usd(x.amountPerMonth)}/mo` : "—"}{x.months ? <span className="pfunnel">{x.months} mo · {usd(total(x))}</span> : null}</span>
-        <span className="tnum">{x.confidence != null ? `${Math.round(x.confidence * 100)}%` : "—"}</span>
-        <span>{x.closeMonth || "—"}</span>
-        <span className={overdue ? "overdue" : "pdate"}>{x.nextAction ? `Next ${shortDate(x.nextAction)}` : "No next date"}{overdue ? " · overdue" : ""}</span>
-        <span className="pco wrapcell">{x.nextSteps || x.lastSummary}</span>
+        <span className="tnum">{x.confidence != null ? `${Math.round(x.confidence * 100)}%` : "—"}<span className="pfunnel">{x.closeMonth || "No close"}</span></span>
+        <span className="step-cell">
+          <span className="pdate">{x.lastAction ? shortDate(x.lastAction) : "No date"}</span>
+          <span className="wrapcell">{x.lastSummary || "—"}</span>
+        </span>
+        <span className="step-cell">
+          <span className={overdue ? "overdue" : "pdate"}>{x.nextAction ? shortDate(x.nextAction) : "No date"}{overdue ? " · overdue" : ""}</span>
+          <span className="wrapcell">{x.nextSteps || "—"}</span>
+        </span>
       </summary>
       <RecordForm kind="deals" row={x as unknown as Record<string, unknown>} version={version} back={back} />
     </details>
@@ -106,7 +121,7 @@ export function Pipeline({ deals, back }: { deals: Stored<Deal> | null; back: st
         return (
           <section key={g.title}>
             <h3 className="group-h">{g.title} <span className="sub">{rows.length} deal{rows.length === 1 ? "" : "s"} · {usd(sum)}/mo · {g.sub}</span></h3>
-            <div className="deal-head rec-row deal-row with-mover" aria-hidden><span title="Starred to close this month">★</span><span>Deal</span><span>Amount</span><span>Conf.</span><span>Close</span><span>Next action</span><span>Next steps</span></div>
+            <div className="deal-head rec-row deal-row with-mover" aria-hidden><span title="Starred to close this month">★</span><span>Deal</span><span>Contact</span><span>Amount</span><span>Odds · close</span><span>Last step</span><span>Next step</span></div>
             <div className="people-list">
               {rows.map((x, i) => (
                 <div className="deal-item" id={`d-${x.id}`} key={x.id}>
