@@ -27,16 +27,16 @@ export function TopBar({ session }: { session: Session }) {
 
 export const TABS = [
   { key: "overview", label: "Overview" },
+  { key: "deals", label: "Won" },
   { key: "pipeline", label: "Pipeline" },
-  { key: "funnel", label: "Funnel" },
+  { key: "log", label: "Intro log" },
+  { key: "triage", label: "Triage calls" },
+  { key: "intros", label: "Intros & bonus" },
   { key: "people", label: "People" },
   { key: "which-ad", label: "Which ad" },
   { key: "ads", label: "Ads" },
-  { key: "intros", label: "Intros & bonus" },
-  { key: "triage", label: "Triage calls" },
-  { key: "deals", label: "Won deals" },
-  { key: "log", label: "Intro log" },
   { key: "how", label: "How we count" },
+  { key: "funnel", label: "Funnel", hidden: true },
 ] as const;
 export type TabKey = (typeof TABS)[number]["key"];
 
@@ -65,7 +65,7 @@ export function Controls({ period, view }: { period: Period; view: TabKey }) {
         </div>
       </div>
       <nav className="subtabs" aria-label="Sections">
-        {TABS.map((t) => (
+        {TABS.filter((t) => !("hidden" in t)).map((t) => (
           <Link key={t.key} href={`/?${new URLSearchParams({ view: t.key, ...periodQuery(period) })}`} aria-current={t.key === view ? "page" : undefined}>{t.label}</Link>
         ))}
       </nav>
